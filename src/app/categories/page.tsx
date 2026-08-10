@@ -29,8 +29,10 @@ export default function CategoriesPage() {
     setError("")
   }
 
-  function handleDelete(id: string) {
-    if (confirm("Yakin hapus kategori ini?")) deleteCategory(id)
+  async function handleDelete(id: string) {
+    if (!confirm("Yakin hapus kategori ini?")) return
+    const ok = await deleteCategory(id)
+    if (!ok) setError("Kategori masih dipakai oleh produk sehingga tidak bisa dihapus.")
   }
 
   return (

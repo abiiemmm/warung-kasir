@@ -45,8 +45,8 @@ export default function TransactionsChart({ transactions }: { transactions: Tran
             <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} interval={2} />
             <YAxis tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, maxCount * 1.15]} />
             <Tooltip
-              formatter={(value: any) => [Number(value), "Transaksi"]}
-              labelFormatter={(label: any) => `Tanggal ${label}`}
+              formatter={(value) => [Number(value), "Transaksi"]}
+              labelFormatter={(label) => `Tanggal ${label}`}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e7e5e4", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
             />
             <Line type="monotone" dataKey="count" stroke="#f97316" strokeWidth={2} dot={{ r: 2, fill: "#f97316" }} activeDot={{ r: 4 }} />

@@ -4,15 +4,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   async rewrites() {
-    if (process.env.NODE_ENV === "development") {
-      return [
-        {
-          source: "/api/:path*",
-          destination: "http://localhost:3001/api/:path*",
-        },
-      ]
-    }
-    return []
+    const destination = process.env.INTERNAL_API_URL || "http://localhost:3001";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${destination}/api/:path*`,
+      },
+    ];
   },
 };
 

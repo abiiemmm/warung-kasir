@@ -11,6 +11,7 @@ export interface Product {
   stock: number
   categoryId: string
   image?: string
+  barcode?: string
   createdAt: string
 }
 
@@ -22,12 +23,16 @@ export interface CartItem {
   image?: string
 }
 
+export type PaymentMethod = "cash" | "qris" | "transfer"
+
 export interface Transaction {
   id: string
   items: CartItem[]
   total: number
   payment: number
   change: number
+  paymentMethod: PaymentMethod
+  discount: number
   createdAt: string
 }
 
@@ -38,7 +43,16 @@ export interface Debt {
   customerName: string
   description: string
   amount: number
+  remaining: number
   status: DebtStatus
+  createdAt: string
+}
+
+export interface DebtPayment {
+  id: string
+  debtId: string
+  amount: number
+  note: string
   createdAt: string
 }
 
@@ -59,4 +73,36 @@ export interface StockReminder {
   productId?: string
   notes: string
   createdAt: string
+}
+
+export interface Paginated<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export interface ReportSummary {
+  count: number
+  totalRevenue: number
+  totalDiscount: number
+  itemCount: number
+  avgPerTx: number
+  byMethod: Record<string, number>
+  daily: { date: string; count: number; revenue: number }[]
+}
+
+export interface ProductReportRow {
+  productId: string
+  name: string
+  qty: number
+  revenue: number
+}
+
+export interface CategoryReportRow {
+  categoryId: string
+  name: string
+  qty: number
+  revenue: number
 }

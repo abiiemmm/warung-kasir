@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { useStore } from "@/context/StoreContext"
+import { useState, useEffect, useCallback } from "react"
+import { getLogsPaginated } from "@/lib/api"
 import type { LogEntry } from "@/lib/types"
 
 const actionColors: Record<string, string> = {
@@ -28,35 +28,44 @@ const entityLabels: Record<string, string> = {
   reminder: "Pengingat",
 }
 
+const PAGE_SIZE = 50
+
 export default function LogsPage() {
-  const { logs } = useStore()
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [entityFilter, setEntityFilter] = useState("")
   const [actionFilter, setActionFilter] = useState("")
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null)
 
-  const filtered = useMemo(() => {
-    let result = logs
+  const [page, setPage] = useState(1)
+  const [data, setData] = useState<LogEntry[]>([])
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(1)
+  const [loading, setLoading] = useState(true)
 
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      result = result.filter(
-        (l) =>
-          l.entityName.toLowerCase().includes(q) ||
-          l.details.toLowerCase().includes(q)
-      )
-    }
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
-    if (entityFilter) {
-      result = result.filter((l) => l.entity === entityFilter)
-    }
+  const load = useCallback(async (p: number, entity: string, action: string, q: string) => {
+    setLoading(true)
+    const res = await getLogsPaginated(p, PAGE_SIZE, { entity, action, q })
+    setData(res.data)
+    setTotal(res.total)
+    setPages(res.pages)
+    setPage(res.page)
+    setLoading(false)
+  }, [])
 
-    if (actionFilter) {
-      result = result.filter((l) => l.action === actionFilter)
-    }
+  useEffect(() => {
+    load(1, entityFilter, actionFilter, debouncedSearch)
+  }, [debouncedSearch, entityFilter, actionFilter, load])
 
-    return result
-  }, [logs, search, entityFilter, actionFilter])
+  function goPage(p: number) {
+    if (p < 1 || p > pages || p === page) return
+    load(p, entityFilter, actionFilter, debouncedSearch)
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -101,9 +110,11 @@ export default function LogsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="p-8 text-sm text-[#78716c] text-center">Memuat...</p>
+        ) : data.length === 0 ? (
           <p className="p-8 text-sm text-[#78716c] text-center">
-            {logs.length === 0 ? "Belum ada log aktivitas" : "Tidak ada log yang cocok"}
+            {total === 0 ? "Belum ada log aktivitas" : "Tidak ada log yang cocok"}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -117,7 +128,7 @@ export default function LogsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((log) => (
+                {data.map((log) => (
                   <tr key={log.id} onClick={() => setSelectedLog(log)} className="border-b border-[#f5f5f4] hover:bg-[#fafaf9] transition-colors cursor-pointer">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -156,11 +167,26 @@ export default function LogsPage() {
         )}
       </div>
 
-      {logs.length > 0 && (
-        <p className="text-[11px] text-[#a8a29e] mt-3 text-right">
-          Total {logs.length} log
-          {filtered.length !== logs.length && ` (${filtered.length} ditampilkan)`}
-        </p>
+      {!loading && pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => goPage(page - 1)}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-xl border border-[#e7e5e4] bg-white text-sm text-[#78716c] hover:bg-[#f5f5f4] disabled:opacity-40 transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm text-[#78716c] px-2">
+            Hal {page} dari {pages} • {total} log
+          </span>
+          <button
+            onClick={() => goPage(page + 1)}
+            disabled={page >= pages}
+            className="px-4 py-2 rounded-xl border border-[#e7e5e4] bg-white text-sm text-[#78716c] hover:bg-[#f5f5f4] disabled:opacity-40 transition-colors"
+          >
+            Berikutnya
+          </button>
+        </div>
       )}
 
       {selectedLog && (

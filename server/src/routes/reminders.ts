@@ -1,41 +1,50 @@
 import { Router } from "express"
 import { db, generateId } from "../db"
+import { reminderSchema, reminderUpdateSchema } from "../validation"
+import { HttpError } from "../utils"
 
 const router = Router()
 
+const selectColumns = "id, date, title, product_id as productId, notes, created_at as createdAt"
+
+function mapReminder(row: Record<string, unknown>) {
+  return { ...row, productId: row.productId || undefined }
+}
+
 router.get("/", (_req, res) => {
-  const rows = db.prepare("SELECT id, date, title, product_id as productId, notes, created_at as createdAt FROM reminders ORDER BY date ASC").all()
-  res.json(rows)
+  const rows = db.prepare(`SELECT ${selectColumns} FROM reminders ORDER BY date ASC`).all() as Record<string, unknown>[]
+  res.json(rows.map(mapReminder))
 })
 
 router.post("/", (req, res) => {
-  const { date, title, productId, notes } = req.body
-  if (!date || !title) return res.status(400).json({ error: "Date and title are required" })
+  const data = reminderSchema.parse(req.body)
   const id = generateId()
   const createdAt = new Date().toISOString()
-  db.prepare("INSERT INTO reminders (id, date, title, product_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(id, date, title, productId || null, notes || "", createdAt)
-  res.json({ id, date, title, productId: productId || undefined, notes: notes || "", createdAt })
+  db.prepare(
+    "INSERT INTO reminders (id, date, title, product_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(id, data.date, data.title, data.productId || null, data.notes || "", createdAt)
+  res.json({ id, date: data.date, title: data.title, productId: data.productId || undefined, notes: data.notes || "", createdAt })
 })
 
 router.put("/:id", (req, res) => {
-  const { date, title, productId, notes } = req.body
+  const data = reminderUpdateSchema.parse(req.body)
   const existing = db.prepare("SELECT id FROM reminders WHERE id = ?").get(req.params.id)
-  if (!existing) return res.status(404).json({ error: "Not found" })
+  if (!existing) throw new HttpError(404, "Pengingat tidak ditemukan")
 
   const fields: string[] = []
   const values: unknown[] = []
-  if (date !== undefined) { fields.push("date = ?"); values.push(date) }
-  if (title !== undefined) { fields.push("title = ?"); values.push(title) }
-  if (productId !== undefined) { fields.push("product_id = ?"); values.push(productId || null) }
-  if (notes !== undefined) { fields.push("notes = ?"); values.push(notes) }
+  if (data.date !== undefined) { fields.push("date = ?"); values.push(data.date) }
+  if (data.title !== undefined) { fields.push("title = ?"); values.push(data.title) }
+  if (data.productId !== undefined) { fields.push("product_id = ?"); values.push(data.productId || null) }
+  if (data.notes !== undefined) { fields.push("notes = ?"); values.push(data.notes) }
 
   if (fields.length > 0) {
     values.push(req.params.id)
     db.prepare(`UPDATE reminders SET ${fields.join(", ")} WHERE id = ?`).run(...values)
   }
 
-  const row = db.prepare("SELECT id, date, title, product_id as productId, notes, created_at as createdAt FROM reminders WHERE id = ?").get(req.params.id) as Record<string, unknown>
-  res.json({ ...row, productId: row.productId || undefined })
+  const row = db.prepare(`SELECT ${selectColumns} FROM reminders WHERE id = ?`).get(req.params.id) as Record<string, unknown>
+  res.json(mapReminder(row))
 })
 
 router.delete("/:id", (req, res) => {

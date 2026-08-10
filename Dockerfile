@@ -9,7 +9,6 @@ COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
 COPY src/ ./src/
 COPY public/ ./public/
 
-ENV NEXT_PUBLIC_API_URL=http://backend:3001/api
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -17,7 +16,6 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_API_URL=http://backend:3001/api
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
