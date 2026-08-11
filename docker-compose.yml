@@ -6,10 +6,10 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - warung-data:/app
+      - warung-data:/app/data
     environment:
       - PORT=3001
-      - DB_PATH=/app/warung.db
+      - DB_PATH=/app/data/warung.db
 
   frontend:
     build:
@@ -20,7 +20,7 @@ services:
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:3001/api
+      - INTERNAL_API_URL=http://backend:3001
 
 volumes:
   warung-data:

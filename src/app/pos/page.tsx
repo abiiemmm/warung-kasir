@@ -3,11 +3,25 @@
 import { useState, useMemo } from "react"
 import { useStore } from "@/context/StoreContext"
 import { formatRupiah } from "@/lib/utils"
-import type { Transaction } from "@/lib/types"
+import type { Transaction, PaymentMethod } from "@/lib/types"
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] = [
+  { value: "cash", label: "Tunai", icon: "💵" },
+  { value: "qris", label: "QRIS", icon: "📱" },
+  { value: "transfer", label: "Transfer", icon: "🏦" },
+]
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  cash: "Tunai",
+  qris: "QRIS",
+  transfer: "Transfer",
+}
 
 export default function PosPage() {
   const { products, categories, cart, addToCart, removeFromCart, updateCartQty, clearCart, checkout } = useStore()
   const [payment, setPayment] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
+  const [discount, setDiscount] = useState("")
   const [search, setSearch] = useState("")
   const [catFilter, setCatFilter] = useState("")
   const [receipt, setReceipt] = useState<Transaction | null>(null)
@@ -15,14 +29,17 @@ export default function PosPage() {
 
   const filtered = useMemo(
     () => products.filter((p) => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
+      const q = search.toLowerCase()
+      const matchSearch = p.name.toLowerCase().includes(q) || (p.barcode || "").toLowerCase().includes(q)
       const matchCat = !catFilter || p.categoryId === catFilter
       return matchSearch && matchCat
     }),
     [products, search, catFilter]
   )
 
-  const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.qty, 0), [cart])
+  const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.qty, 0), [cart])
+  const discountNum = Math.min(Number(discount) || 0, subtotal)
+  const total = Math.max(0, subtotal - discountNum)
 
   function handleAdd(product: typeof products[0]) {
     if (product.stock > 0) addToCart({ productId: product.id, name: product.name, price: product.price, qty: 1, image: product.image })
@@ -31,8 +48,8 @@ export default function PosPage() {
   async function handleCheckout() {
     const pay = Number(payment)
     if (!pay || pay < total) return
-    const tx = await checkout(pay)
-    if (tx) { setReceipt(tx); setPayment("") }
+    const tx = await checkout(pay, paymentMethod, discountNum)
+    if (tx) { setReceipt(tx); setPayment(""); setDiscount("") }
   }
 
   function handlePrint() {
@@ -173,8 +190,49 @@ export default function PosPage() {
 
                 <div className="border-t border-[#e7e5e4] pt-4 space-y-3">
                   <div className="flex justify-between items-baseline">
+                    <span className="text-sm text-[#78716c]">Subtotal</span>
+                    <span className="text-lg font-bold text-[#1c1917]">{formatRupiah(subtotal)}</span>
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#a8a29e] font-medium">−</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Diskon (Rp)"
+                      className="w-full pl-8 pr-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                      value={discount === "" ? "" : discountNum.toLocaleString("id-ID")}
+                      onChange={(e) => setDiscount(e.target.value.replace(/\D/g, ""))}
+                    />
+                  </div>
+
+                  {discountNum > 0 && (
+                    <div className="flex justify-between items-center bg-amber-50 rounded-lg px-3 py-2">
+                      <span className="text-xs text-amber-600 font-medium">Diskon</span>
+                      <span className="text-sm font-bold text-amber-600">−{formatRupiah(discountNum)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-baseline">
                     <span className="text-sm text-[#78716c]">Total</span>
                     <span className="text-xl font-bold text-[#1c1917]">{formatRupiah(total)}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {PAYMENT_METHODS.map((m) => (
+                      <button
+                        key={m.value}
+                        onClick={() => setPaymentMethod(m.value)}
+                        className={`flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${
+                          paymentMethod === m.value
+                            ? "border-[#1c1917] bg-[#1c1917] text-white shadow-sm"
+                            : "border-[#e7e5e4] bg-[#f5f5f4] text-[#78716c] hover:bg-white"
+                        }`}
+                      >
+                        <span className="text-base">{m.icon}</span>
+                        {m.label}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="relative">
@@ -261,11 +319,21 @@ const PreviewReceipt = ({ receipt }: { receipt: Transaction }) => {
 
         <div className="border-t-2 border-dashed border-gray-300 pt-2 space-y-1">
           <div className="flex justify-between text-[11px] text-[#44403c]">
+            <span className="font-semibold">Subtotal</span>
+            <span className="text-[#44403c]">{formatRupiah(receipt.total + receipt.discount)}</span>
+          </div>
+          {receipt.discount > 0 && (
+            <div className="flex justify-between text-[11px] text-[#44403c]">
+              <span>Diskon</span>
+              <span>−{formatRupiah(receipt.discount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-[11px] text-[#44403c]">
             <span className="font-semibold">Total</span>
             <span className="font-bold text-sm text-[#1c1917]">{formatRupiah(receipt.total)}</span>
           </div>
           <div className="flex justify-between text-[11px] text-[#44403c]">
-            <span>Tunai</span>
+            <span>{PAYMENT_LABELS[receipt.paymentMethod] || "Tunai"}</span>
             <span>{formatRupiah(receipt.payment)}</span>
           </div>
           <div className="flex justify-between text-[11px]">

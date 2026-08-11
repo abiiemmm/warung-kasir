@@ -46,7 +46,7 @@ export default function TopProductsChart({ transactions }: { transactions: Trans
             <XAxis type="number" tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} domain={[0, maxQty * 1.2]} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#44403c" }} axisLine={false} tickLine={false} width={120} />
             <Tooltip
-              formatter={(value: any, name: any) => { const v = Number(value); return [name === "qty" ? `${v} terjual` : formatRupiah(v), name === "qty" ? "Jumlah" : "Pendapatan"] }}
+              formatter={(value, name) => { const v = Number(value); return [name === "qty" ? `${v} terjual` : formatRupiah(v), name === "qty" ? "Jumlah" : "Pendapatan"] }}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e7e5e4", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
             />
             <Bar dataKey="qty" fill="#3b82f6" radius={[0, 4, 4, 0]} maxBarSize={16} />

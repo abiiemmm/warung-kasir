@@ -1,42 +1,71 @@
 import { Router } from "express"
 import { db, generateId } from "../db"
+import { productSchema, productUpdateSchema, stockPatchSchema } from "../validation"
+import { HttpError } from "../utils"
 
 const router = Router()
 
-router.get("/", (_req, res) => {
-  const rows = db.prepare("SELECT id, name, price, stock, category_id as categoryId, image, created_at as createdAt FROM products ORDER BY name").all()
-  res.json(rows)
+const selectColumns = "id, name, price, stock, category_id as categoryId, image, barcode, created_at as createdAt"
+
+function mapProduct(row: Record<string, unknown>) {
+  return {
+    ...row,
+    image: row.image || undefined,
+    barcode: row.barcode || undefined,
+  }
+}
+
+router.get("/", (req, res) => {
+  const { search, categoryId } = req.query
+  let sql = `SELECT ${selectColumns} FROM products`
+  const where: string[] = []
+  const values: unknown[] = []
+  if (search) {
+    where.push("(LOWER(name) LIKE ? OR barcode LIKE ?)")
+    const like = `%${String(search).toLowerCase()}%`
+    values.push(like, like)
+  }
+  if (categoryId) {
+    where.push("category_id = ?")
+    values.push(categoryId)
+  }
+  if (where.length) sql += ` WHERE ${where.join(" AND ")}`
+  sql += " ORDER BY name"
+  const rows = db.prepare(sql).all(...values) as Record<string, unknown>[]
+  res.json(rows.map(mapProduct))
 })
 
 router.post("/", (req, res) => {
-  const { name, price, stock, categoryId, image } = req.body
-  if (!name || price === undefined || stock === undefined || !categoryId) return res.status(400).json({ error: "Missing required fields" })
+  const data = productSchema.parse(req.body)
   const id = generateId()
   const createdAt = new Date().toISOString()
-  db.prepare("INSERT INTO products (id, name, price, stock, category_id, image, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(id, name, price, stock, categoryId, image || null, createdAt)
-  res.json({ id, name, price, stock, categoryId, image: image || undefined, createdAt })
+  db.prepare(
+    "INSERT INTO products (id, name, price, stock, category_id, image, barcode, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(id, data.name, data.price, data.stock, data.categoryId, data.image || null, data.barcode || null, createdAt)
+  res.json({ ...data, id, createdAt, image: data.image || undefined })
 })
 
 router.put("/:id", (req, res) => {
-  const { name, price, stock, categoryId, image } = req.body
+  const data = productUpdateSchema.parse(req.body)
   const existing = db.prepare("SELECT id FROM products WHERE id = ?").get(req.params.id)
-  if (!existing) return res.status(404).json({ error: "Not found" })
+  if (!existing) throw new HttpError(404, "Produk tidak ditemukan")
 
   const fields: string[] = []
   const values: unknown[] = []
-  if (name !== undefined) { fields.push("name = ?"); values.push(name) }
-  if (price !== undefined) { fields.push("price = ?"); values.push(price) }
-  if (stock !== undefined) { fields.push("stock = ?"); values.push(stock) }
-  if (categoryId !== undefined) { fields.push("category_id = ?"); values.push(categoryId) }
-  if (image !== undefined) { fields.push("image = ?"); values.push(image || null) }
+  if (data.name !== undefined) { fields.push("name = ?"); values.push(data.name) }
+  if (data.price !== undefined) { fields.push("price = ?"); values.push(data.price) }
+  if (data.stock !== undefined) { fields.push("stock = ?"); values.push(data.stock) }
+  if (data.categoryId !== undefined) { fields.push("category_id = ?"); values.push(data.categoryId) }
+  if (data.image !== undefined) { fields.push("image = ?"); values.push(data.image || null) }
+  if (data.barcode !== undefined) { fields.push("barcode = ?"); values.push(data.barcode || null) }
 
   if (fields.length > 0) {
     values.push(req.params.id)
     db.prepare(`UPDATE products SET ${fields.join(", ")} WHERE id = ?`).run(...values)
   }
 
-  const row = db.prepare("SELECT id, name, price, stock, category_id as categoryId, image, created_at as createdAt FROM products WHERE id = ?").get(req.params.id) as Record<string, unknown>
-  res.json({ ...row, image: row.image || undefined })
+  const row = db.prepare(`SELECT ${selectColumns} FROM products WHERE id = ?`).get(req.params.id) as Record<string, unknown>
+  res.json(mapProduct(row))
 })
 
 router.delete("/:id", (req, res) => {
@@ -45,11 +74,10 @@ router.delete("/:id", (req, res) => {
 })
 
 router.patch("/:id/stock", (req, res) => {
-  const { qty } = req.body
-  if (qty === undefined) return res.status(400).json({ error: "qty is required" })
+  const { qty } = stockPatchSchema.parse(req.body)
   const existing = db.prepare("SELECT id, stock FROM products WHERE id = ?").get(req.params.id) as { id: string; stock: number } | undefined
-  if (!existing) return res.status(404).json({ error: "Not found" })
-  const newStock = Math.max(0, existing.stock - qty)
+  if (!existing) throw new HttpError(404, "Produk tidak ditemukan")
+  const newStock = Math.max(0, existing.stock + qty)
   db.prepare("UPDATE products SET stock = ? WHERE id = ?").run(newStock, req.params.id)
   res.json({ stock: newStock })
 })

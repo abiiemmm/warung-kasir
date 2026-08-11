@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from "react"
-import { Category, Product, Transaction, CartItem, Debt, DebtStatus, StockReminder, LogEntry } from "@/lib/types"
+import { Category, Product, Transaction, CartItem, Debt, DebtStatus, StockReminder, LogEntry, PaymentMethod } from "@/lib/types"
 import {
   getCategories,
   addCategory,
@@ -19,6 +19,7 @@ import {
   updateDebtStatus,
   updateDebt,
   deleteDebt,
+  addDebtPayment,
   getReminders,
   addReminder,
   updateReminder,
@@ -112,15 +113,17 @@ interface StoreContextType extends State {
   addProduct: (product: Omit<Product, "id" | "createdAt">) => Promise<Product>
   updateProduct: (id: string, data: Partial<Omit<Product, "id" | "createdAt">>) => Promise<Product | null>
   deleteProduct: (id: string) => Promise<boolean>
+  updateStock: (id: string, qty: number) => Promise<boolean>
   addToCart: (item: CartItem) => void
   removeFromCart: (index: number) => void
   updateCartQty: (index: number, qty: number) => void
   clearCart: () => void
-  checkout: (payment: number) => Promise<Transaction | null>
-  addDebt: (debt: Omit<Debt, "id" | "createdAt">) => Promise<Debt>
+  checkout: (payment: number, paymentMethod: PaymentMethod, discount: number) => Promise<Transaction | null>
+  addDebt: (debt: { customerName: string; description: string; amount: number; status: DebtStatus }) => Promise<Debt>
   updateDebtStatus: (id: string, status: DebtStatus) => Promise<Debt | null>
   updateDebt: (id: string, data: Partial<Omit<Debt, "id" | "createdAt">>) => Promise<Debt | null>
   deleteDebt: (id: string) => Promise<boolean>
+  payDebt: (id: string, amount: number, note: string) => Promise<Debt | null>
   addReminder: (reminder: Omit<StockReminder, "id" | "createdAt">) => Promise<StockReminder>
   updateReminder: (id: string, data: Partial<Omit<StockReminder, "id" | "createdAt">>) => Promise<StockReminder | null>
   deleteReminder: (id: string) => Promise<boolean>
@@ -175,7 +178,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const deleteCategoryFn = useCallback(async (id: string) => {
     const cat = state.categories.find((c) => c.id === id)
-    const result = await deleteCategory(id)
+    let result = false
+    try {
+      result = await deleteCategory(id)
+    } catch { /* kategori masih dipakai produk */ }
     const categories = await getCategories()
     dispatch({ type: "SET_CATEGORIES", payload: categories })
     if (result && cat) addLog("deleted", "category", id, cat.name, `Kategori "${cat.name}" dihapus`)
@@ -214,6 +220,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return result
   }, [addLog, state.products])
 
+  const updateStockFn = useCallback(async (id: string, qty: number) => {
+    const ok = await updateProductStock(id, qty)
+    if (!ok) return false
+    const products = await getProducts()
+    dispatch({ type: "SET_PRODUCTS", payload: products })
+    const prod = products.find((p) => p.id === id)
+    if (prod) addLog("updated", "product", id, prod.name, `Stok "${prod.name}" diubah ${qty > 0 ? `+${qty}` : qty} → ${prod.stock}`)
+    return true
+  }, [addLog])
+
   const addToCart = useCallback((item: CartItem) => {
     dispatch({ type: "ADD_TO_CART", payload: item })
   }, [])
@@ -232,18 +248,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const checkout = useCallback(
-    async (payment: number) => {
+    async (payment: number, paymentMethod: PaymentMethod = "cash", discount = 0) => {
       if (state.cart.length === 0) return null
-      const total = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+      const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+      const total = Math.max(0, subtotal - discount)
       if (payment < total) return null
 
-      for (const item of state.cart) await updateProductStock(item.productId, item.qty)
-
-      const transaction: Omit<Transaction, "id" | "createdAt"> = {
-        items: [...state.cart],
-        total,
+      const transaction = {
+        items: state.cart.map((item) => ({ productId: item.productId, qty: item.qty })),
         payment,
-        change: payment - total,
+        paymentMethod,
+        discount,
       }
 
       const result = await addTransaction(transaction)
@@ -260,7 +275,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.cart, addLog]
   )
 
-  const addDebtFn = useCallback(async (debt: Omit<Debt, "id" | "createdAt">) => {
+  const addDebtFn = useCallback(async (debt: { customerName: string; description: string; amount: number; status: DebtStatus }) => {
     const result = await addDebt(debt)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
@@ -294,6 +309,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (result && prev) addLog("deleted", "debt", id, prev.customerName, `Piutang "${prev.customerName}" dihapus`)
     return result
   }, [addLog, state.debts])
+
+  const payDebtFn = useCallback(async (id: string, amount: number, note: string) => {
+    const result = await addDebtPayment(id, amount, note)
+    const debts = await getDebts()
+    dispatch({ type: "SET_DEBTS", payload: debts })
+    if (result) {
+      addLog("paid", "debt", id, result.customerName, `Pembayaran piutang ${result.customerName} Rp${amount.toLocaleString("id-ID")}${result.remaining > 0 ? ` — sisa Rp${result.remaining.toLocaleString("id-ID")}` : " — Lunas"}`)
+    }
+    return result
+  }, [addLog])
 
   const addReminderFn = useCallback(async (reminder: Omit<StockReminder, "id" | "createdAt">) => {
     const result = await addReminder(reminder)
@@ -332,6 +357,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addProduct: addProductFn,
         updateProduct: updateProductFn,
         deleteProduct: deleteProductFn,
+        updateStock: updateStockFn,
         addToCart,
         removeFromCart,
         updateCartQty,
@@ -341,6 +367,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updateDebtStatus: updateDebtStatusFn,
         updateDebt: updateDebtFn,
         deleteDebt: deleteDebtFn,
+        payDebt: payDebtFn,
         addReminder: addReminderFn,
         updateReminder: updateReminderFn,
         deleteReminder: deleteReminderFn,

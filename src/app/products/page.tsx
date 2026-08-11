@@ -10,12 +10,13 @@ interface ProductForm {
   price: string
   stock: string
   categoryId: string
+  barcode: string
 }
 
-const emptyForm: ProductForm = { name: "", price: "", stock: "", categoryId: "" }
+const emptyForm: ProductForm = { name: "", price: "", stock: "", categoryId: "", barcode: "" }
 
 export default function ProductsPage() {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useStore()
+  const { products, categories, addProduct, updateProduct, deleteProduct, updateStock } = useStore()
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [formImage, setFormImage] = useState<string>("")
   const [search, setSearch] = useState("")
@@ -41,12 +42,12 @@ export default function ProductsPage() {
     const stock = Number(form.stock)
     if (!name || !form.categoryId) { setError("Nama dan kategori harus diisi"); return }
     if (price < 0 || stock < 0) { setError("Harga dan stok tidak boleh negatif"); return }
-    addProduct({ name, price, stock, categoryId: form.categoryId, image: formImage || undefined })
+    addProduct({ name, price, stock, categoryId: form.categoryId, image: formImage || undefined, barcode: form.barcode.trim() || undefined })
     resetForm()
   }
 
   function openEdit(p: Product) {
-    setEditForm({ name: p.name, price: String(p.price), stock: String(p.stock), categoryId: p.categoryId })
+    setEditForm({ name: p.name, price: String(p.price), stock: String(p.stock), categoryId: p.categoryId, barcode: p.barcode || "" })
     setEditImage(p.image || "")
     setEditError("")
     setEditTarget(p)
@@ -59,7 +60,7 @@ export default function ProductsPage() {
     const stock = Number(editForm.stock)
     if (!name || !editForm.categoryId) { setEditError("Nama dan kategori harus diisi"); return }
     if (price < 0 || stock < 0) { setEditError("Harga dan stok tidak boleh negatif"); return }
-    const data: Partial<Omit<Product, "id" | "createdAt">> = { name, price, stock, categoryId: editForm.categoryId }
+    const data: Partial<Omit<Product, "id" | "createdAt">> = { name, price, stock, categoryId: editForm.categoryId, barcode: editForm.barcode.trim() || undefined }
     if (editImage !== (editTarget.image || "")) data.image = editImage || undefined
     updateProduct(editTarget.id, data)
     setEditTarget(null)
@@ -67,6 +68,14 @@ export default function ProductsPage() {
 
   async function handleDelete(id: string) {
     if (confirm("Yakin hapus produk ini?")) await deleteProduct(id)
+  }
+
+  function handleRestock(p: Product) {
+    const input = prompt(`Restok "${p.name}" — tambah berapa pcs?`, "10")
+    if (input === null) return
+    const qty = Number(input)
+    if (!Number.isInteger(qty) || qty <= 0) { alert("Jumlah harus bilangan bulat positif"); return }
+    updateStock(p.id, qty)
   }
 
   async function handleFormImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -126,12 +135,21 @@ export default function ProductsPage() {
             <input type="file" accept="image/*" className="hidden" onChange={handleFormImage} />
           </label>
         </div>
-        {formImage && (
-          <div className="mt-3 flex items-center gap-3">
-            <img src={formImage} alt="preview" className="w-12 h-12 rounded-lg object-cover border border-[#e7e5e4]" />
-            <button type="button" onClick={() => setFormImage("")} className="text-xs text-red-500 hover:text-red-600">Hapus</button>
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+          <input
+            type="text"
+            placeholder="Barcode (opsional)"
+            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            value={form.barcode}
+            onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+          />
+          {formImage && (
+            <div className="flex items-center gap-3 sm:col-span-2">
+              <img src={formImage} alt="preview" className="w-12 h-12 rounded-lg object-cover border border-[#e7e5e4]" />
+              <button type="button" onClick={() => setFormImage("")} className="text-xs text-red-500 hover:text-red-600">Hapus</button>
+            </div>
+          )}
+        </div>
         {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
         <div className="flex gap-2 mt-3">
           <button type="submit" className="px-5 py-2 bg-[#1c1917] text-white rounded-lg text-sm font-medium hover:bg-[#292524] transition-colors">Tambah Produk</button>
@@ -192,7 +210,8 @@ export default function ProductsPage() {
                       )}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5">
-                      <span className="font-medium text-[#44403c]">{p.name}</span>
+                      <div className="font-medium text-[#44403c]">{p.name}</div>
+                      {p.barcode && <div className="text-[11px] text-[#a8a29e] font-mono">{p.barcode}</div>}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#f5f5f4] text-[#78716c]">
@@ -203,7 +222,10 @@ export default function ProductsPage() {
                     <td className="px-3 sm:px-6 py-3.5 text-right">
                       <span className={`font-semibold ${p.stock <= 5 ? "text-red-500" : "text-[#44403c]"}`}>{p.stock}</span>
                     </td>
-                    <td className="px-3 sm:px-6 py-3.5 text-right">
+                    <td className="px-3 sm:px-6 py-3.5 text-right whitespace-nowrap">
+                      <button onClick={() => handleRestock(p)} className="text-xs px-3 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors font-medium mr-1.5">
+                        + Stok
+                      </button>
                       <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-lg text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1917] transition-colors font-medium mr-1.5">
                         Edit
                       </button>
@@ -269,6 +291,15 @@ export default function ProductsPage() {
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Barcode (opsional)</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  value={editForm.barcode}
+                  onChange={(e) => setEditForm({ ...editForm, barcode: e.target.value })}
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#78716c] mb-1.5">Gambar</label>

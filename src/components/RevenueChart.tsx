@@ -46,8 +46,8 @@ export default function RevenueChart({ transactions }: { transactions: Transacti
             <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} interval={2} />
             <YAxis tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} domain={[0, maxRevenue * 1.15]} />
             <Tooltip
-              formatter={(value: any) => [formatRupiah(Number(value)), "Pendapatan"]}
-              labelFormatter={(label: any) => `Tanggal ${label}`}
+              formatter={(value) => [formatRupiah(Number(value)), "Pendapatan"]}
+              labelFormatter={(label) => `Tanggal ${label}`}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e7e5e4", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
             />
             <Bar dataKey="revenue" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={20} />

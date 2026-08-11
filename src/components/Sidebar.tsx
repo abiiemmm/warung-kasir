@@ -11,8 +11,11 @@ const links = [
   { href: "/categories", label: "Kategori", icon: "FolderKanban" },
   { href: "/transactions", label: "Riwayat", icon: "ScrollText" },
   { href: "/debts", label: "Piutang", icon: "HandCoins" },
+  { href: "/customers", label: "Pelanggan", icon: "Users" },
+  { href: "/reports", label: "Laporan", icon: "BarChart3" },
   { href: "/calendar", label: "Kalender", icon: "Calendar" },
   { href: "/logs", label: "Logs", icon: "History" },
+  { href: "/settings", label: "Pengaturan", icon: "Settings" },
 ]
 
 const icons: Record<string, ReactNode> = {
@@ -56,6 +59,21 @@ const icons: Record<string, ReactNode> = {
       <path d="M15 12h-5" /><path d="M15 8h-5" /><path d="M19 17V5a2 2 0 0 0-2-2H4" /><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a2 2 0 0 0-2 2v1a2 2 0 1 1-4 0V5a2 2 0 1 0-2 2v2a1 1 0 0 0 1 1h3" />
     </svg>
   ),
+  Users: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  BarChart3: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
+    </svg>
+  ),
+  Settings: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
 }
 
 export default function Sidebar() {
@@ -90,8 +108,18 @@ export default function Sidebar() {
         <div className="flex items-center justify-between px-5 pt-6 pb-5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c0c0d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="22" height="22" rx="6" fill="#0c0c0d"/>
+                <rect x="5" y="6" width="10" height="8" rx="1.6" fill="#ffffff"/>
+                <rect x="6.2" y="7" width="7.6" height="2.6" rx="0.8" fill="#0c0c0d"/>
+                <path d="M8.2 8.6l1 1 2-2.4" stroke="#34d399" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="6.8" cy="12" r="0.7" fill="#d6d3d1"/>
+                <circle cx="9.5" cy="12" r="0.7" fill="#d6d3d1"/>
+                <circle cx="12.2" cy="12" r="0.7" fill="#d6d3d1"/>
+                <circle cx="14.9" cy="12" r="0.7" fill="#d6d3d1"/>
+                <rect x="5" y="14.5" width="10" height="3" rx="1.2" fill="#f5f5f4"/>
+                <rect x="6.5" y="15.8" width="4" height="0.7" rx="0.35" fill="#a8a29e"/>
+                <circle cx="18" cy="17.5" r="3.2" fill="#34d399"/>
               </svg>
             </div>
             <div>

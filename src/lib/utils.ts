@@ -7,12 +7,15 @@ export function formatRupiah(amount: number): string {
   }).format(amount)
 }
 
-export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 9)
+export function toLocalDateString(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
 }
 
 export function today(): string {
-  return new Date().toISOString().split("T")[0]
+  return toLocalDateString(new Date())
 }
 
 export function compressImage(file: File, maxSize = 200): Promise<string> {
@@ -42,5 +45,26 @@ export function compressImage(file: File, maxSize = 200): Promise<string> {
 
 export function todayTransactions<T extends { createdAt: string }>(transactions: T[]) {
   const t = today()
-  return transactions.filter((tx) => tx.createdAt.startsWith(t))
+  return transactions.filter((tx) => toLocalDateString(new Date(tx.createdAt)) === t)
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export function toCsv(rows: Record<string, string | number>[]): string {
+  if (rows.length === 0) return ""
+  const headers = Object.keys(rows[0])
+  const escape = (v: string | number) => {
+    const s = String(v)
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h] ?? "")).join(","))].join("\n")
 }

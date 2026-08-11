@@ -1,22 +1,50 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { useStore } from "@/context/StoreContext"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { formatRupiah, today } from "@/lib/utils"
-import type { Transaction } from "@/lib/types"
+import { getTransactionsPaginated } from "@/lib/api"
+import type { Transaction, PaymentMethod } from "@/lib/types"
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  cash: "Tunai",
+  qris: "QRIS",
+  transfer: "Transfer",
+}
+
+const PAGE_SIZE = 50
 
 export default function TransactionsPage() {
-  const { transactions } = useStore()
   const [filter, setFilter] = useState<"all" | "today" | "date">("all")
   const [filterDate, setFilterDate] = useState("")
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
-  const displayed = (() => {
-    if (filter === "today") return transactions.filter((tx) => tx.createdAt.startsWith(today()))
-    if (filter === "date" && filterDate) return transactions.filter((tx) => tx.createdAt.startsWith(filterDate))
-    return transactions
-  })()
+  const [page, setPage] = useState(1)
+  const [data, setData] = useState<Transaction[]>([])
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+
+  const load = useCallback(async (p: number, f: "all" | "today" | "date", date: string) => {
+    setLoading(true)
+    const from = f === "all" ? undefined : date || today()
+    const to = from
+    const res = await getTransactionsPaginated(p, PAGE_SIZE, { from, to })
+    setData(res.data)
+    setTotal(res.total)
+    setPages(res.pages)
+    setPage(res.page)
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    load(1, filter, filterDate)
+  }, [filter, filterDate, load])
+
+  function goPage(p: number) {
+    if (p < 1 || p > pages || p === page) return
+    load(p, filter, filterDate)
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
@@ -53,19 +81,23 @@ export default function TransactionsPage() {
       </div>
 
       <div className="space-y-3">
-        {displayed.length === 0 ? (
+        {loading ? (
+          <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-12 text-center">
+            <p className="text-sm text-[#a8a29e]">Memuat...</p>
+          </div>
+        ) : data.length === 0 ? (
           <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-12 text-center">
             <p className="text-3xl mb-3">📋</p>
             <p className="text-sm text-[#a8a29e]">Belum ada transaksi</p>
           </div>
         ) : (
-          displayed.map((tx) => (
+          data.map((tx) => (
             <div key={tx.id} className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
               <button onClick={() => setSelectedTx(tx)} className="w-full flex items-center justify-between p-5 text-left">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-[#f5f5f4] flex items-center justify-center text-sm">🧾</div>
-                  <div>
-                    <p className="text-sm font-medium text-[#44403c]">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[#44403c] truncate">
                       {tx.items.length} item<span className="text-[#a8a29e] font-normal"> — </span>
                       {tx.items.map((i) => i.name).slice(0, 2).join(", ")}
                       {tx.items.length > 2 && <span className="text-[#a8a29e]"> +{tx.items.length - 2} lainnya</span>}
@@ -78,7 +110,7 @@ export default function TransactionsPage() {
                 <div className="text-right flex items-center gap-3">
                   <div>
                     <p className="text-base font-bold text-[#1c1917]">{formatRupiah(tx.total)}</p>
-                    <p className="text-xs text-[#a8a29e]">Bayar {formatRupiah(tx.payment)}</p>
+                    <p className="text-xs text-[#a8a29e]">{PAYMENT_LABELS[tx.paymentMethod] || tx.paymentMethod} • {formatRupiah(tx.payment)}</p>
                   </div>
                   <svg className="w-4 h-4 text-[#a8a29e]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
@@ -87,6 +119,28 @@ export default function TransactionsPage() {
           ))
         )}
       </div>
+
+      {!loading && pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => goPage(page - 1)}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-xl border border-[#e7e5e4] bg-white text-sm text-[#78716c] hover:bg-[#f5f5f4] disabled:opacity-40 transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm text-[#78716c] px-2">
+            Hal {page} dari {pages} • {total} transaksi
+          </span>
+          <button
+            onClick={() => goPage(page + 1)}
+            disabled={page >= pages}
+            className="px-4 py-2 rounded-xl border border-[#e7e5e4] bg-white text-sm text-[#78716c] hover:bg-[#f5f5f4] disabled:opacity-40 transition-colors"
+          >
+            Berikutnya
+          </button>
+        </div>
+      )}
 
       {selectedTx && <DetailModal tx={selectedTx} onClose={() => setSelectedTx(null)} />}
     </div>
@@ -134,8 +188,12 @@ function DetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) 
             ))}
           </div>
           <div className="border-t-2 border-dashed border-gray-300 pt-2 space-y-1">
+            <div className="flex justify-between text-[11px] text-[#44403c]"><span className="font-semibold">Subtotal</span><span>{formatRupiah(tx.total + tx.discount)}</span></div>
+            {tx.discount > 0 && (
+              <div className="flex justify-between text-[11px] text-[#44403c]"><span>Diskon</span><span>−{formatRupiah(tx.discount)}</span></div>
+            )}
             <div className="flex justify-between text-[11px] text-[#44403c]"><span className="font-semibold">Total</span><span className="font-bold text-sm text-[#1c1917]">{formatRupiah(tx.total)}</span></div>
-            <div className="flex justify-between text-[11px] text-[#44403c]"><span>Tunai</span><span>{formatRupiah(tx.payment)}</span></div>
+            <div className="flex justify-between text-[11px] text-[#44403c]"><span>{PAYMENT_LABELS[tx.paymentMethod] || "Tunai"}</span><span>{formatRupiah(tx.payment)}</span></div>
             <div className="flex justify-between text-[11px]"><span>Kembali</span><span className="font-semibold text-emerald-600">{formatRupiah(tx.change)}</span></div>
           </div>
           <div className="border-t-2 border-dashed border-gray-300 mt-3 pt-3 text-center text-[10px] text-gray-400">
@@ -187,8 +245,13 @@ function DetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) 
             </table>
 
             <div className="border-t border-[#e7e5e4] mt-3 pt-3 space-y-1">
+              <div className="flex justify-between text-sm"><span className="text-[#78716c]">Subtotal</span><span className="text-[#44403c]">{formatRupiah(tx.total + tx.discount)}</span></div>
+              {tx.discount > 0 && (
+                <div className="flex justify-between text-sm"><span className="text-[#78716c]">Diskon</span><span className="text-amber-600">−{formatRupiah(tx.discount)}</span></div>
+              )}
               <div className="flex justify-between text-sm"><span className="text-[#78716c]">Total</span><span className="font-bold text-[#1c1917]">{formatRupiah(tx.total)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-[#78716c]">Tunai</span><span className="font-medium text-[#44403c]">{formatRupiah(tx.payment)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-[#78716c]">Metode</span><span className="font-medium text-[#44403c]">{PAYMENT_LABELS[tx.paymentMethod] || tx.paymentMethod}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-[#78716c]">Bayar</span><span className="font-medium text-[#44403c]">{formatRupiah(tx.payment)}</span></div>
               <div className="flex justify-between text-sm"><span className="text-[#78716c]">Kembali</span><span className="font-semibold text-emerald-600">{formatRupiah(tx.change)}</span></div>
             </div>
 
