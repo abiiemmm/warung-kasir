@@ -18,24 +18,25 @@ function seed() {
   for (const c of cats) insertCat.run(c.id, c.name, now)
 
   const insertProduct = db.prepare(
-    "INSERT INTO products (id, name, price, stock, category_id, image, barcode, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    `INSERT INTO products (id, name, price, cost_price, stock, min_stock, category_id, image, barcode, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
   const products = [
-    { name: "Indomie Goreng", price: 4000, stock: 100, categoryId: catIds[0], barcode: "8991002101027" },
-    { name: "Indomie Rebus", price: 4000, stock: 100, categoryId: catIds[0], barcode: "8991002101041" },
-    { name: "Nasi Padang", price: 15000, stock: 20, categoryId: catIds[0], barcode: null },
-    { name: "Teh Botol", price: 5000, stock: 50, categoryId: catIds[1], barcode: "8996001301340" },
-    { name: "Aqua 600ml", price: 3000, stock: 60, categoryId: catIds[1], barcode: "8992769010182" },
-    { name: "Kopi ABC", price: 2000, stock: 80, categoryId: catIds[1], barcode: null },
-    { name: "Beras 5kg", price: 75000, stock: 10, categoryId: catIds[2], barcode: null },
-    { name: "Gula Pasir 1kg", price: 18000, stock: 15, categoryId: catIds[2], barcode: null },
-    { name: "Minyak Goreng 1L", price: 22000, stock: 12, categoryId: catIds[2], barcode: null },
-    { name: "Sampoerna Mild", price: 36000, stock: 30, categoryId: catIds[3], barcode: null },
-    { name: "Buku Tulis", price: 5000, stock: 40, categoryId: catIds[4], barcode: null },
-    { name: "Pulpen", price: 3000, stock: 50, categoryId: catIds[4], barcode: null },
+    { name: "Indomie Goreng", price: 4000, cost: 3100, stock: 100, min: 24, categoryId: catIds[0], barcode: "8991002101027" },
+    { name: "Indomie Rebus", price: 4000, cost: 3100, stock: 100, min: 24, categoryId: catIds[0], barcode: "8991002101041" },
+    { name: "Nasi Padang", price: 15000, cost: 11000, stock: 20, min: 5, categoryId: catIds[0], barcode: null },
+    { name: "Teh Botol", price: 5000, cost: 3800, stock: 50, min: 12, categoryId: catIds[1], barcode: "8996001301340" },
+    { name: "Aqua 600ml", price: 3000, cost: 2200, stock: 60, min: 12, categoryId: catIds[1], barcode: "8992769010182" },
+    { name: "Kopi ABC", price: 2000, cost: 1500, stock: 80, min: 20, categoryId: catIds[1], barcode: null },
+    { name: "Beras 5kg", price: 75000, cost: 66000, stock: 10, min: 5, categoryId: catIds[2], barcode: null },
+    { name: "Gula Pasir 1kg", price: 18000, cost: 15500, stock: 15, min: 5, categoryId: catIds[2], barcode: null },
+    { name: "Minyak Goreng 1L", price: 22000, cost: 19000, stock: 12, min: 6, categoryId: catIds[2], barcode: null },
+    { name: "Sampoerna Mild", price: 36000, cost: 33000, stock: 30, min: 10, categoryId: catIds[3], barcode: null },
+    { name: "Buku Tulis", price: 5000, cost: 3500, stock: 40, min: 10, categoryId: catIds[4], barcode: null },
+    { name: "Pulpen", price: 3000, cost: 1800, stock: 50, min: 10, categoryId: catIds[4], barcode: null },
   ]
   for (const p of products)
-    insertProduct.run(generateId(), p.name, p.price, p.stock, p.categoryId, null, p.barcode, now)
+    insertProduct.run(generateId(), p.name, p.price, p.cost, p.stock, p.min, p.categoryId, null, p.barcode, now)
 
   const insertDebt = db.prepare(
     "INSERT INTO debts (id, customer_name, description, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?)"

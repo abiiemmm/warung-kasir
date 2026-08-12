@@ -43,6 +43,13 @@ export function compressImage(file: File, maxSize = 200): Promise<string> {
   })
 }
 
+/** Ambang bawaan bila produk belum punya stok minimum sendiri. */
+export const DEFAULT_MIN_STOCK = 10
+
+export function isLowStock(product: { stock: number; minStock: number }): boolean {
+  return product.stock <= (product.minStock > 0 ? product.minStock : DEFAULT_MIN_STOCK)
+}
+
 export function todayTransactions<T extends { createdAt: string }>(transactions: T[]) {
   const t = today()
   return transactions.filter((tx) => toLocalDateString(new Date(tx.createdAt)) === t)

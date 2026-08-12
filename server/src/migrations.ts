@@ -88,4 +88,94 @@ export const migrations: Migration[] = [
       `)
     },
   },
+  {
+    id: "003_auth",
+    up(db) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE,
+          pin_hash TEXT NOT NULL,
+          pin_salt TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'cashier',
+          active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+          token_hash TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL,
+          expires_at TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+      `)
+
+      // Log mencatat siapa pelakunya; kolom lama diisi string kosong.
+      db.exec(`
+        ALTER TABLE logs ADD COLUMN user_id TEXT NOT NULL DEFAULT '';
+        ALTER TABLE logs ADD COLUMN user_name TEXT NOT NULL DEFAULT '';
+      `)
+    },
+  },
+  {
+    id: "004_shifts_cost_void",
+    up(db) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS shifts (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id),
+          user_name TEXT NOT NULL,
+          opening_cash INTEGER NOT NULL,
+          closing_cash INTEGER,
+          expected_cash INTEGER,
+          difference INTEGER,
+          note TEXT NOT NULL DEFAULT '',
+          opened_at TEXT NOT NULL,
+          closed_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_shifts_user_open ON shifts(user_id, closed_at);
+
+        CREATE TABLE IF NOT EXISTS stock_adjustments (
+          id TEXT PRIMARY KEY,
+          product_id TEXT NOT NULL,
+          product_name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          qty_before INTEGER NOT NULL,
+          qty_after INTEGER NOT NULL,
+          delta INTEGER NOT NULL,
+          reason TEXT NOT NULL DEFAULT '',
+          user_id TEXT NOT NULL DEFAULT '',
+          user_name TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_stock_adj_product ON stock_adjustments(product_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_adj_created ON stock_adjustments(created_at);
+      `)
+
+      db.exec(`
+        ALTER TABLE products ADD COLUMN cost_price INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE products ADD COLUMN min_stock INTEGER NOT NULL DEFAULT 0;
+
+        ALTER TABLE transactions ADD COLUMN user_id TEXT NOT NULL DEFAULT '';
+        ALTER TABLE transactions ADD COLUMN user_name TEXT NOT NULL DEFAULT '';
+        ALTER TABLE transactions ADD COLUMN shift_id TEXT;
+        ALTER TABLE transactions ADD COLUMN cost_total INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE transactions ADD COLUMN voided_at TEXT;
+        ALTER TABLE transactions ADD COLUMN void_reason TEXT NOT NULL DEFAULT '';
+        ALTER TABLE transactions ADD COLUMN idempotency_key TEXT;
+      `)
+
+      // Partial unique index: banyak baris lama boleh NULL, tapi key yang dipakai wajib unik.
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_tx_idempotency
+          ON transactions(idempotency_key) WHERE idempotency_key IS NOT NULL;
+        CREATE INDEX IF NOT EXISTS idx_tx_shift ON transactions(shift_id);
+      `)
+    },
+  },
 ]

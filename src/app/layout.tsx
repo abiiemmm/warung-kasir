@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
-import { StoreProvider } from "@/context/StoreContext"
-import Sidebar from "@/components/Sidebar"
+import { AuthProvider } from "@/context/AuthContext"
+import AppShell from "@/components/AppShell"
 import PwaRegister from "@/components/PwaRegister"
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -22,13 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id" className={plusJakartaSans.className}>
       <body>
-        <StoreProvider>
+        <AuthProvider>
           <PwaRegister />
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 min-w-0 bg-[#f5f5f4]">{children}</main>
-          </div>
-        </StoreProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   )
