@@ -29,9 +29,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <StoreProvider>
-      <div className="flex min-h-screen">
+      <div className="app-shell flex min-h-screen">
+        <a className="skip-link" href="#main-content">Langsung ke konten</a>
         <Sidebar />
-        <main className="flex-1 min-w-0 bg-[#f5f5f4]">{children}</main>
+        <main id="main-content" className="workspace flex-1 min-w-0" tabIndex={-1}>{children}</main>
       </div>
     </StoreProvider>
   )

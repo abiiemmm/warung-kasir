@@ -1,13 +1,8 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
 import AppShell from "@/components/AppShell"
 import PwaRegister from "@/components/PwaRegister"
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-})
 
 export const metadata: Metadata = {
   title: "Warung Kasir",
@@ -20,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={plusJakartaSans.className}>
+    <html lang="id">
       <body>
         <AuthProvider>
           <PwaRegister />

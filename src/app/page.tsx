@@ -1,153 +1,76 @@
 "use client"
 
+import Link from "next/link"
 import { useStore } from "@/context/StoreContext"
-import { formatRupiah, todayTransactions } from "@/lib/utils"
+import { useAuth } from "@/context/AuthContext"
+import { formatRupiah, todayTransactions, today, isLowStock } from "@/lib/utils"
 import RevenueChart from "@/components/RevenueChart"
 import TopProductsChart from "@/components/TopProductsChart"
 import CategoryChart from "@/components/CategoryChart"
 import TransactionsChart from "@/components/TransactionsChart"
+import Icon from "@/components/Icon"
 
 export default function Dashboard() {
   const { products, categories, transactions, debts, reminders } = useStore()
-  const todayTx = todayTransactions(transactions)
+  const { user } = useAuth()
+  const validTransactions = transactions.filter(tx => !tx.voidedAt)
+  const todayTx = todayTransactions(validTransactions)
   const todayRevenue = todayTx.reduce((sum, tx) => sum + tx.total, 0)
-  const lowStock = products.filter((p) => p.stock <= 5)
+  const lowStock = products.filter(isLowStock).sort((a, b) => a.stock - b.stock)
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0)
-  const pendingDebts = debts.filter((d) => d.status === "pending")
-  const totalPiutang = pendingDebts.reduce((sum, d) => sum + d.amount, 0)
-  const todayStr = new Date().toISOString().split("T")[0]
-  const todayReminders = reminders.filter((r) => r.date === todayStr)
-
-  const stats = [
-    { label: "Total Produk", value: products.length, icon: "📦" },
-    { label: "Total Kategori", value: categories.length, icon: "📁" },
-    { label: "Transaksi Hari Ini", value: todayTx.length, icon: "🧾" },
-    { label: "Pendapatan Hari Ini", value: formatRupiah(todayRevenue), icon: "💰", highlight: true },
-    { label: "Total Stok", value: totalStock, icon: "📊" },
-    { label: "Piutang", value: formatRupiah(totalPiutang), icon: "📝" },
-  ]
+  const pendingDebts = debts.filter(d => d.status === "pending")
+  const totalPiutang = pendingDebts.reduce((sum, d) => sum + d.remaining, 0)
+  const todayReminders = reminders.filter(r => r.date === today())
+  const date = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-[22px] font-semibold text-[#1c1917] tracking-tight">Dashboard</h1>
-        <p className="text-sm text-[#78716c] mt-1">Ringkasan bisnis warung Anda</p>
-      </div>
+    <div className="dashboard page-container">
+      <div className="page-eyebrow"><span>BUKU HARIAN WARUNG</span><span>{date}</span></div>
+      <header className="page-heading">
+        <div><h1>Selamat berjualan, {user?.name.split(" ")[0]}.</h1><p>Semua catatan warung, dalam satu tempat.</p></div>
+        <Link href="/pos" className="button-primary"><Icon name="plus" size={18} /> Transaksi baru <Icon name="arrow" size={18} /></Link>
+      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-5 transition-all duration-200 hover:shadow-md hover:border-[#d6d3d1]"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-lg">{stat.icon}</span>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${stat.highlight ? "bg-emerald-50 text-emerald-600" : "bg-[#f5f5f4] text-[#78716c]"}`}>
-                {stat.highlight ? "Hari ini" : "Total"}
-              </span>
-            </div>
-            <p className="text-[28px] font-semibold text-[#1c1917] tracking-tight">{stat.value}</p>
-            <p className="text-xs text-[#78716c] mt-1">{stat.label}</p>
-          </div>
-        ))}
-      </div>
+      <section className="daily-summary" aria-label="Ringkasan warung">
+        <div className="revenue-stat"><span className="stat-caption">PENJUALAN HARI INI</span><strong>{formatRupiah(todayRevenue)}</strong><span className="stat-foot"><Icon name="receipt" size={16} /> Dari {todayTx.length} transaksi hari ini</span><Icon name="shop" size={108} className="stat-watermark" /></div>
+        <div className="summary-stat"><span className="stat-caption">TRANSAKSI HARI INI</span><strong>{todayTx.length}<small> transaksi</small></strong><span className="stat-foot">Rata-rata {formatRupiah(todayTx.length ? todayRevenue / todayTx.length : 0)}</span></div>
+        <Link href="/products" className="summary-stat"><span className="stat-caption">ISI RAK WARUNG <Icon name="arrow" size={16} /></span><strong>{products.length}<small> produk</small></strong><span className="stat-foot">{totalStock} stok · {categories.length} kategori</span></Link>
+        <Link href="/debts" className="summary-stat"><span className="stat-caption">PIUTANG TERSISA <Icon name="arrow" size={16} /></span><strong className="debt-value">{formatRupiah(totalPiutang)}</strong><span className="stat-foot">{pendingDebts.length} catatan belum lunas</span></Link>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <RevenueChart transactions={transactions} />
-        <TransactionsChart transactions={transactions} />
-        <TopProductsChart transactions={transactions} />
-        <CategoryChart transactions={transactions} products={products} categories={categories} />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {todayReminders.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <h2 className="text-sm font-semibold text-[#1c1917]">Pengingat Hari Ini</h2>
-            </div>
-            <div className="space-y-2.5">
-              {todayReminders.map((r) => (
-                <div key={r.id} className="flex items-center justify-between py-2 px-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <div>
-                    <span className="text-sm font-medium text-[#44403c]">{r.title}</span>
-                    {r.notes && <p className="text-xs text-[#78716c]">{r.notes}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {lowStock.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <h2 className="text-sm font-semibold text-[#1c1917]">Stok Menipis</h2>
-            </div>
-            <div className="space-y-2.5">
-              {lowStock.map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-2 px-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <span className="text-sm font-medium text-[#44403c]">{p.name}</span>
-                  <span className="text-xs font-semibold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md">Sisa {p.stock}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {pendingDebts.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <h2 className="text-sm font-semibold text-[#1c1917]">Piutang Belum Dibayar</h2>
-            </div>
-            <div className="space-y-2.5">
-              {pendingDebts.slice(0, 4).map((d) => (
-                <div key={d.id} className="flex items-center justify-between py-2 px-3 bg-red-50 rounded-lg border border-red-100">
-                  <div>
-                    <span className="text-sm font-medium text-[#44403c]">{d.customerName}</span>
-                    <p className="text-xs text-[#78716c]">{d.description}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-md whitespace-nowrap">{formatRupiah(d.amount)}</span>
-                </div>
-              ))}
-              {pendingDebts.length > 4 && (
-                <a href="/debts" className="block text-center text-xs font-medium text-[#78716c] hover:text-[#1c1917] transition-colors pt-1">
-                  Lihat semua ({pendingDebts.length})
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-blue-500" />
-            <h2 className="text-sm font-semibold text-[#1c1917]">Transaksi Terakhir</h2>
-          </div>
-          {transactions.length === 0 ? (
-            <p className="text-sm text-[#78716c] py-6 text-center">Belum ada transaksi</p>
-          ) : (
-            <div className="space-y-2.5">
-              {transactions.slice(0, 5).map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between py-2.5 border-b border-[#f5f5f4] last:border-0">
-                  <div className="min-w-0 flex-1 mr-4">
-                    <p className="text-sm font-medium text-[#44403c] truncate">
-                      {tx.items.map((i) => i.name).slice(0, 2).join(", ")}
-                      {tx.items.length > 2 && <span className="text-[#78716c]"> +{tx.items.length - 2} lagi</span>}
-                    </p>
-                    <p className="text-xs text-[#a8a29e] mt-0.5">
-                      {new Date(tx.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-[#1c1917] whitespace-nowrap">{formatRupiah(tx.total)}</span>
-                </div>
-              ))}
-            </div>
-          )}
+      <div className="dashboard-main">
+        <div className="dashboard-charts">
+          <div className="section-heading"><div><span className="section-number">01 /</span><h2>Catatan penjualan</h2></div><span>Bulan berjalan</span></div>
+          <RevenueChart transactions={validTransactions} />
+          <div className="secondary-charts"><TopProductsChart transactions={validTransactions} /><TransactionsChart transactions={validTransactions} /></div>
         </div>
+        <aside className="attention-panel">
+          <div className="section-heading"><div><span className="section-number">02 /</span><h2>Perlu dilihat</h2></div><Icon name="alert" size={18} /></div>
+          <section className="stock-note">
+            <div className="note-title"><Icon name="box" size={20} /><h3>Waktunya isi rak</h3><span>{lowStock.length}</span></div>
+            <p>Produk yang sudah mencapai batas stok minimum.</p>
+            {lowStock.length === 0 ? <div className="quiet-state"><Icon name="check" /><span>Stok masih aman. Siap melayani!</span></div> : <div className="stock-list">{lowStock.slice(0, 5).map(p => <Link href="/products" key={p.id}><span>{p.name}</span><strong className={p.stock === 0 ? "out-of-stock" : ""}>{p.stock === 0 ? "Habis" : p.stock + " tersisa"}</strong></Link>)}</div>}
+            <Link href="/products" className="text-link">Kelola stok produk <Icon name="arrow" size={16} /></Link>
+          </section>
+          <section className="reminder-note">
+            <div className="note-title"><Icon name="calendar" size={20} /><h3>Agenda hari ini</h3></div>
+            {todayReminders.length ? todayReminders.map(r => <div className="reminder-entry" key={r.id}><strong>{r.title}</strong>{r.notes && <p>{r.notes}</p>}</div>) : <p>Belum ada pengingat hari ini. Catat jadwal belanja agar tidak terlewat.</p>}
+            <Link href="/calendar" className="text-link">Buka pengingat <Icon name="arrow" size={16} /></Link>
+          </section>
+          <Link href="/shift" className="shift-link"><Icon name="wallet" size={22} /><span><strong>Uang laci sudah cocok?</strong><small>Periksa catatan shift kasir</small></span><Icon name="arrow" size={18} /></Link>
+        </aside>
       </div>
+
+      <div className="dashboard-bottom">
+        <section className="recent-section">
+          <div className="section-heading"><div><span className="section-number">03 /</span><h2>Transaksi terakhir</h2></div><Link href="/transactions" className="text-link">Lihat semua <Icon name="arrow" size={16} /></Link></div>
+          <div className="ledger-table">
+            {transactions.length === 0 ? <div className="empty-ledger"><Icon name="receipt" size={32} /><h3>Halaman pertama masih kosong.</h3><p>Transaksi yang selesai akan tercatat di sini.</p><Link href="/pos" className="text-link">Mulai transaksi <Icon name="arrow" size={16} /></Link></div> : transactions.slice(0, 5).map(tx => <Link href="/transactions" className="ledger-row" key={tx.id}><span className="ledger-icon"><Icon name="receipt" size={18} /></span><div><strong>{tx.items.map(i => i.name).slice(0, 2).join(", ")}{tx.items.length > 2 ? " +" + (tx.items.length - 2) : ""}</strong><small>{new Date(tx.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {tx.userName}</small></div><span className={tx.voidedAt ? "status-void" : "status-paid"}>{tx.voidedAt ? "Dibatalkan" : tx.paymentMethod === "cash" ? "Tunai" : tx.paymentMethod === "qris" ? "QRIS" : "Transfer"}</span><strong>{formatRupiah(tx.total)}</strong></Link>)}
+          </div>
+        </section>
+        <CategoryChart transactions={validTransactions} products={products} categories={categories} />
+      </div>
+      <footer className="page-footer"><span>warung kasir.</span><span>Jualan lancar. Catatan teratur.</span></footer>
     </div>
   )
 }

@@ -145,22 +145,22 @@ export default function SettingsPage() {
   }
 
   const inputClass =
-    "w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+    "w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-[22px] font-semibold text-[#1c1917] tracking-tight">Pengaturan</h1>
-        <p className="text-sm text-[#78716c] mt-1">
-          Masuk sebagai <span className="font-medium text-[#44403c]">{user?.name}</span> ({isOwner ? "Pemilik" : "Kasir"})
+        <h1 className="text-[22px] font-semibold text-[var(--ink)] tracking-tight">Pengaturan</h1>
+        <p className="text-sm text-[var(--muted)] mt-1">
+          Masuk sebagai <span className="font-medium text-[#45533f]">{user?.name}</span> ({isOwner ? "Pemilik" : "Kasir"})
         </p>
       </div>
 
       {/* Ganti PIN — tersedia untuk semua peran */}
-      <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-lg mb-4">🔑</div>
-        <h2 className="text-sm font-semibold text-[#1c1917] mb-1">Ganti PIN</h2>
-        <p className="text-xs text-[#78716c] mb-4">Gunakan PIN yang tidak mudah ditebak dan jangan dibagikan ke orang lain.</p>
+      <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6 mb-6">
+        <div className="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center text-lg mb-4">🔑</div>
+        <h2 className="text-sm font-semibold text-[var(--ink)] mb-1">Ganti PIN</h2>
+        <p className="text-xs text-[var(--muted)] mb-4">Gunakan PIN yang tidak mudah ditebak dan jangan dibagikan ke orang lain.</p>
         <form onSubmit={handleChangePin} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input type="password" inputMode="numeric" placeholder="PIN sekarang" className={inputClass}
             value={currentPin} onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ""))} maxLength={8} />
@@ -169,7 +169,7 @@ export default function SettingsPage() {
           <input type="password" inputMode="numeric" placeholder="Ulangi PIN baru" className={inputClass}
             value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} maxLength={8} />
           <button type="submit" disabled={busy !== null || currentPin.length < 4 || newPin.length < 4}
-            className="sm:col-span-3 px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] disabled:opacity-40 transition-colors">
+            className="sm:col-span-3 px-5 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-40 transition-colors">
             {busy === "pin" ? "Menyimpan…" : "Simpan PIN Baru"}
           </button>
         </form>
@@ -178,10 +178,10 @@ export default function SettingsPage() {
       {isOwner && (
         <>
           {/* Manajemen pengguna */}
-          <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-lg mb-4">👥</div>
-            <h2 className="text-sm font-semibold text-[#1c1917] mb-1">Pengguna</h2>
-            <p className="text-xs text-[#78716c] mb-4">Tiap kasir sebaiknya punya akun sendiri agar transaksi & selisih laci bisa ditelusuri.</p>
+          <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6 mb-6">
+            <div className="w-10 h-10 rounded-md bg-violet-50 flex items-center justify-center text-lg mb-4">👥</div>
+            <h2 className="text-sm font-semibold text-[var(--ink)] mb-1">Pengguna</h2>
+            <p className="text-xs text-[var(--muted)] mb-4">Tiap kasir sebaiknya punya akun sendiri agar transaksi & selisih laci bisa ditelusuri.</p>
 
             <form onSubmit={handleAddUser} className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-5">
               <input type="text" placeholder="Nama kasir" className={inputClass}
@@ -194,28 +194,28 @@ export default function SettingsPage() {
                 <option value="owner">Pemilik</option>
               </select>
               <button type="submit" disabled={busy !== null || !newUser.name.trim() || newUser.pin.length < 4}
-                className="px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] disabled:opacity-40 transition-colors">
+                className="px-5 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-40 transition-colors">
                 Tambah
               </button>
             </form>
 
-            <div className="divide-y divide-[#f5f5f4] border-t border-[#f5f5f4]">
+            <div className="divide-y divide-[var(--paper)] border-t border-[var(--paper)]">
               {users.map((u) => (
                 <div key={u.id} className="flex items-center gap-3 py-3">
-                  <div className="w-8 h-8 rounded-full bg-[#f5f5f4] flex items-center justify-center text-xs font-semibold text-[#78716c]">
+                  <div className="w-8 h-8 rounded-full bg-[var(--paper)] flex items-center justify-center text-xs font-semibold text-[var(--muted)]">
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[#44403c] truncate">
+                    <p className="text-sm font-medium text-[#45533f] truncate">
                       {u.name}
-                      {u.id === user?.id && <span className="text-[11px] text-[#a8a29e] font-normal"> — Anda</span>}
+                      {u.id === user?.id && <span className="text-[11px] text-[#858a7b] font-normal"> — Anda</span>}
                     </p>
-                    <p className="text-[11px] text-[#78716c]">
+                    <p className="text-[11px] text-[var(--muted)]">
                       {u.role === "owner" ? "Pemilik" : "Kasir"}
                       {!u.active && <span className="text-red-500"> · nonaktif</span>}
                     </p>
                   </div>
-                  <button onClick={() => handleResetUserPin(u)} className="text-xs px-3 py-1.5 rounded-lg text-[#78716c] hover:bg-[#f5f5f4] transition-colors font-medium">
+                  <button onClick={() => handleResetUserPin(u)} className="text-xs px-3 py-1.5 rounded-lg text-[var(--muted)] hover:bg-[var(--paper)] transition-colors font-medium">
                     Ganti PIN
                   </button>
                   {u.id !== user?.id && (
@@ -234,49 +234,49 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg mb-4">💾</div>
-              <h2 className="text-sm font-semibold text-[#1c1917] mb-1">Backup Database</h2>
-              <p className="text-xs text-[#78716c] mb-4">Unduh salinan lengkap database (.db). Simpan di tempat aman secara berkala.</p>
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6">
+              <div className="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center text-lg mb-4">💾</div>
+              <h2 className="text-sm font-semibold text-[var(--ink)] mb-1">Backup Database</h2>
+              <p className="text-xs text-[var(--muted)] mb-4">Unduh salinan lengkap database (.db). Simpan di tempat aman secara berkala.</p>
               <button onClick={handleBackup} disabled={busy !== null}
-                className="w-full px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] disabled:opacity-50 transition-colors">
+                className="w-full px-5 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-50 transition-colors">
                 {busy === "backup" ? "Menyiapkan..." : "Unduh Backup"}
               </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg mb-4">📄</div>
-              <h2 className="text-sm font-semibold text-[#1c1917] mb-1">Ekspor Data (JSON)</h2>
-              <p className="text-xs text-[#78716c] mb-4">Unduh semua data dalam format JSON yang mudah dibaca atau dipindahkan.</p>
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6">
+              <div className="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center text-lg mb-4">📄</div>
+              <h2 className="text-sm font-semibold text-[var(--ink)] mb-1">Ekspor Data (JSON)</h2>
+              <p className="text-xs text-[var(--muted)] mb-4">Unduh semua data dalam format JSON yang mudah dibaca atau dipindahkan.</p>
               <button onClick={handleExport} disabled={busy !== null}
-                className="w-full px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+                className="w-full px-5 py-2.5 bg-[var(--green)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-50 transition-colors">
                 {busy === "export" ? "Menyiapkan..." : "Ekspor JSON"}
               </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-              <div className="w-10 h-10 rounded-xl bg-[#f5f5f4] flex items-center justify-center text-lg mb-4">♻️</div>
-              <h2 className="text-sm font-semibold text-[#1c1917] mb-1">Restore Database</h2>
-              <p className="text-xs text-[#78716c] mb-4">
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6">
+              <div className="w-10 h-10 rounded-md bg-[var(--paper)] flex items-center justify-center text-lg mb-4">♻️</div>
+              <h2 className="text-sm font-semibold text-[var(--ink)] mb-1">Restore Database</h2>
+              <p className="text-xs text-[var(--muted)] mb-4">
                 Pulihkan data dari file backup (.db). <span className="text-red-500 font-medium">Seluruh data saat ini akan diganti.</span>
               </p>
               <button onClick={() => fileInputRef.current?.click()} disabled={busy !== null}
-                className="w-full px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] disabled:opacity-50 transition-colors">
+                className="w-full px-5 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-50 transition-colors">
                 {busy === "restore" ? "Memulihkan..." : "Pilih File & Restore"}
               </button>
               <input ref={fileInputRef} type="file" accept=".db,application/octet-stream" className="hidden" onChange={handleRestoreFile} />
             </div>
           </div>
 
-          <div className="mt-8 bg-red-50/50 border-2 border-red-200 rounded-2xl p-6">
+          <div className="mt-8 bg-red-50/50 border-2 border-red-200 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-100 text-red-600 text-[11px] font-bold uppercase tracking-wider">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                 Danger Zone
               </span>
-              <h2 className="text-sm font-bold text-[#1c1917]">Reset Semua Data</h2>
+              <h2 className="text-sm font-bold text-[var(--ink)]">Reset Semua Data</h2>
             </div>
-            <p className="text-xs text-[#78716c] mb-4">
+            <p className="text-xs text-[var(--muted)] mb-4">
               Menghapus <span className="font-medium text-red-600">secara permanen</span> seluruh produk, kategori,
               transaksi, piutang, shift, dan log aktivitas. Akun pengguna tetap dipertahankan. Tindakan ini{" "}
               <span className="font-medium text-red-600">tidak bisa dibatalkan</span> — buat backup dulu.
@@ -284,7 +284,7 @@ export default function SettingsPage() {
 
             <label className="flex items-center gap-2.5 mb-4 cursor-pointer select-none">
               <input type="checkbox" checked={reseed} onChange={(e) => setReseed(e.target.checked)} className="w-4 h-4 accent-red-600" />
-              <span className="text-sm text-[#44403c]">Isi ulang dengan data contoh setelah reset</span>
+              <span className="text-sm text-[#45533f]">Isi ulang dengan data contoh setelah reset</span>
             </label>
 
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -293,10 +293,10 @@ export default function SettingsPage() {
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder={`Ketik "${RESET_CONFIRM_PHRASE}" untuk konfirmasi`}
-                className="flex-1 px-4 py-2.5 bg-white border border-red-200 rounded-xl text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] border border-red-200 rounded-md text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
               />
               <button onClick={handleReset} disabled={confirmText !== RESET_CONFIRM_PHRASE || busy !== null}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-500 disabled:bg-[#d6d3d1] disabled:cursor-not-allowed transition-colors whitespace-nowrap">
+                className="px-6 py-2.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-500 disabled:bg-[#cdd2c2] disabled:cursor-not-allowed transition-colors whitespace-nowrap">
                 {busy === "reset" ? "Menghapus..." : "Hapus Semua Data"}
               </button>
             </div>
@@ -305,7 +305,7 @@ export default function SettingsPage() {
       )}
 
       {message && (
-        <div className={`mt-4 rounded-xl px-4 py-3 text-sm ${message.type === "ok" ? "bg-emerald-50 border border-emerald-100 text-emerald-700" : "bg-red-50 border border-red-100 text-red-700"}`}>
+        <div className={`mt-4 rounded-md px-4 py-3 text-sm ${message.type === "ok" ? "bg-emerald-50 border border-emerald-100 text-emerald-700" : "bg-red-50 border border-red-100 text-red-700"}`}>
           {message.text}
         </div>
       )}
