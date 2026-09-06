@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element -- gambar produk berupa data-URL, next/image tidak mendukungnya */
+
 import { useState, useMemo } from "react"
 import { useStore } from "@/context/StoreContext"
 import { formatRupiah } from "@/lib/utils"
@@ -42,7 +44,16 @@ export default function PosPage() {
   const total = Math.max(0, subtotal - discountNum)
 
   function handleAdd(product: typeof products[0]) {
-    if (product.stock > 0) addToCart({ productId: product.id, name: product.name, price: product.price, qty: 1, image: product.image })
+    if (product.stock > 0) {
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        costPrice: product.costPrice,
+        qty: 1,
+        image: product.image,
+      })
+    }
   }
 
   async function handleCheckout() {

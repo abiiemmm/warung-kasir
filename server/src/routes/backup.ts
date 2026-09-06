@@ -3,18 +3,32 @@ import express from "express"
 import os from "os"
 import path from "path"
 import fs from "fs"
+import { randomBytes } from "crypto"
 import Database from "better-sqlite3"
-import { db, DB_PATH, closeDb, reopenDb, generateId } from "../db"
+import { db, DB_PATH, closeDb, reopenDb } from "../db"
 import { HttpError } from "../utils"
 import { seed } from "../seed"
+import { resetSchema } from "../validation"
+import { writeLog } from "../audit"
+import { ensureDefaultOwner } from "../auth"
+import { requireContentType } from "../middleware"
 
 const backupRouter = Router()
 const exportRouter = Router()
 const restoreRouter = Router()
 const resetRouter = Router()
 
+/**
+ * Nama acak (bukan tanggal) supaya file sementara berisi salinan database tidak
+ * bisa ditebak oleh pengguna lain di mesin yang sama, lalu selalu dihapus baik
+ * sukses maupun gagal.
+ */
+function tempFilePath(prefix: string, ext: string): string {
+  return path.join(os.tmpdir(), `${prefix}-${randomBytes(8).toString("hex")}.${ext}`)
+}
+
 backupRouter.get("/", (_req, res) => {
-  const tmp = path.join(os.tmpdir(), `warung-backup-${Date.now()}.db`)
+  const tmp = tempFilePath("warung-backup", "db")
   db.backup(tmp)
     .then(() => {
       res.download(tmp, "warung-backup.db", () => {
@@ -22,6 +36,7 @@ backupRouter.get("/", (_req, res) => {
       })
     })
     .catch((err) => {
+      fs.rm(tmp, { force: true }, () => {})
       console.error(err)
       res.status(500).json({ error: "Gagal membuat backup" })
     })
@@ -34,16 +49,25 @@ exportRouter.get("/", (_req, res) => {
   for (const table of TABLES) {
     data[table] = db.prepare(`SELECT * FROM ${table}`).all()
   }
-  const tmp = path.join(os.tmpdir(), `warung-export-${Date.now()}.json`)
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 2))
-  res.download(tmp, "warung-data-export.json", () => {
+  const tmp = tempFilePath("warung-export", "json")
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), { mode: 0o600 })
+    res.download(tmp, "warung-data-export.json", () => {
+      fs.rm(tmp, { force: true }, () => {})
+    })
+  } catch (err) {
     fs.rm(tmp, { force: true }, () => {})
-  })
+    console.error(err)
+    res.status(500).json({ error: "Gagal membuat export" })
+  }
 })
 
 restoreRouter.post(
   "/",
-  express.raw({ type: () => true, limit: "50mb" }),
+  // Wajib octet-stream: menutup celah CSRF karena content-type ini selalu memicu
+  // preflight, sehingga request lintas situs diblokir CORS sebelum sampai ke sini.
+  requireContentType("application/octet-stream"),
+  express.raw({ type: "application/octet-stream", limit: "50mb" }),
   (req, res) => {
     const buf = req.body as Buffer
     if (!Buffer.isBuffer(buf) || buf.length === 0) {
@@ -72,15 +96,27 @@ restoreRouter.post(
     }
     fs.rmSync(tmp, { force: true })
     reopenDb()
+    // File backup bisa berasal dari versi yang belum punya tabel users.
+    ensureDefaultOwner()
 
     res.json({ success: true })
   }
 )
 
-const TABLES_IN_ORDER = ["debt_payments", "debts", "transactions", "logs", "reminders", "products", "categories"]
+const TABLES_IN_ORDER = [
+  "debt_payments",
+  "debts",
+  "transactions",
+  "stock_adjustments",
+  "shifts",
+  "logs",
+  "reminders",
+  "products",
+  "categories",
+]
 
 resetRouter.post("/", (req, res) => {
-  const { seed: reseed } = (req.body ?? {}) as { seed?: boolean }
+  const { seed: reseed } = resetSchema.parse(req.body)
 
   const wipe = db.transaction(() => {
     for (const table of TABLES_IN_ORDER) {
@@ -91,9 +127,12 @@ resetRouter.post("/", (req, res) => {
 
   if (reseed) seed()
 
-  db.prepare(
-    "INSERT INTO logs (id, action, entity, entity_id, entity_name, details, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(generateId(), "updated", "system", "", "System", `Semua data direset${reseed ? " lalu diisi ulang data contoh" : ""}`, new Date().toISOString())
+  writeLog(req, {
+    action: "reset",
+    entity: "system",
+    entityName: "Sistem",
+    details: `Semua data direset${reseed ? " lalu diisi ulang data contoh" : ""}`,
+  })
 
   res.json({ success: true })
 })

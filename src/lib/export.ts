@@ -8,7 +8,6 @@ import {
   TableCell,
   TableRow,
   WidthType,
-  HeadingLevel,
   TextRun,
   BorderStyle,
   AlignmentType,

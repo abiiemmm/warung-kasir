@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from "react"
-import { Category, Product, Transaction, CartItem, Debt, DebtStatus, StockReminder, LogEntry, PaymentMethod } from "@/lib/types"
+import { Category, Product, Transaction, CartItem, Debt, DebtStatus, StockReminder, PaymentMethod } from "@/lib/types"
 import {
   getCategories,
   addCategory,
@@ -24,8 +24,6 @@ import {
   addReminder,
   updateReminder,
   deleteReminder,
-  getLogs,
-  addLogEntry,
 } from "@/lib/api"
 
 interface State {
@@ -34,18 +32,16 @@ interface State {
   transactions: Transaction[]
   debts: Debt[]
   reminders: StockReminder[]
-  logs: LogEntry[]
   cart: CartItem[]
 }
 
 type Action =
-  | { type: "SET_DATA"; payload: { categories: Category[]; products: Product[]; transactions: Transaction[]; debts: Debt[]; reminders: StockReminder[]; logs: LogEntry[] } }
+  | { type: "SET_DATA"; payload: { categories: Category[]; products: Product[]; transactions: Transaction[]; debts: Debt[]; reminders: StockReminder[] } }
   | { type: "SET_CATEGORIES"; payload: Category[] }
   | { type: "SET_PRODUCTS"; payload: Product[] }
   | { type: "SET_TRANSACTIONS"; payload: Transaction[] }
   | { type: "SET_DEBTS"; payload: Debt[] }
   | { type: "SET_REMINDERS"; payload: StockReminder[] }
-  | { type: "SET_LOGS"; payload: LogEntry[] }
   | { type: "ADD_TO_CART"; payload: CartItem }
   | { type: "REMOVE_FROM_CART"; payload: number }
   | { type: "UPDATE_CART_QTY"; payload: { index: number; qty: number } }
@@ -57,7 +53,6 @@ const initialState: State = {
   transactions: [],
   debts: [],
   reminders: [],
-  logs: [],
   cart: [],
 }
 
@@ -75,8 +70,6 @@ function reducer(state: State, action: Action): State {
       return { ...state, debts: action.payload }
     case "SET_REMINDERS":
       return { ...state, reminders: action.payload }
-    case "SET_LOGS":
-      return { ...state, logs: action.payload }
     case "ADD_TO_CART": {
       const existing = state.cart.find((item) => item.productId === action.payload.productId)
       if (existing) {
@@ -134,67 +127,50 @@ const StoreContext = createContext<StoreContextType | null>(null)
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  const refreshLogs = useCallback(async () => {
-    const logs = await getLogs()
-    dispatch({ type: "SET_LOGS", payload: logs })
-  }, [])
-
   const refreshData = useCallback(async () => {
-    const [categories, products, transactions, debts, reminders, logs] = await Promise.all([
+    const [categories, products, transactions, debts, reminders] = await Promise.all([
       getCategories(),
       getProducts(),
       getTransactions(),
       getDebts(),
       getReminders(),
-      getLogs(),
     ])
-    dispatch({ type: "SET_DATA", payload: { categories, products, transactions, debts, reminders, logs } })
+    dispatch({ type: "SET_DATA", payload: { categories, products, transactions, debts, reminders } })
   }, [])
 
   useEffect(() => {
     refreshData()
   }, [refreshData])
 
-  const addLog = useCallback(async (action: string, entity: string, entityId: string, entityName: string, details: string) => {
-    await addLogEntry({ action, entity, entityId, entityName, details })
-    await refreshLogs()
-  }, [refreshLogs])
-
   const addCategoryFn = useCallback(async (name: string) => {
     const cat = await addCategory(name)
     const categories = await getCategories()
     dispatch({ type: "SET_CATEGORIES", payload: categories })
-    addLog("created", "category", cat.id, cat.name, `Kategori "${cat.name}" dibuat`)
     return cat
-  }, [addLog])
+  }, [])
 
   const updateCategoryFn = useCallback(async (id: string, name: string) => {
     const result = await updateCategory(id, name)
     const categories = await getCategories()
     dispatch({ type: "SET_CATEGORIES", payload: categories })
-    if (result) addLog("updated", "category", id, result.name, `Kategori diganti menjadi "${name}"`)
     return result
-  }, [addLog])
+  }, [])
 
   const deleteCategoryFn = useCallback(async (id: string) => {
-    const cat = state.categories.find((c) => c.id === id)
     let result = false
     try {
       result = await deleteCategory(id)
     } catch { /* kategori masih dipakai produk */ }
     const categories = await getCategories()
     dispatch({ type: "SET_CATEGORIES", payload: categories })
-    if (result && cat) addLog("deleted", "category", id, cat.name, `Kategori "${cat.name}" dihapus`)
     return result
-  }, [addLog, state.categories])
+  }, [])
 
-  const addProductFn = useCallback(async (product: Omit<Product, "id" | "createdAt">) => {
-    const prod = await addProduct(product)
+  const addProductFn = useCallback(async (product: Omit<Product, "id" | "createdAt">) => {    const result = await addProduct(product)
     const products = await getProducts()
     dispatch({ type: "SET_PRODUCTS", payload: products })
-    addLog("created", "product", prod.id, prod.name, `Produk "${prod.name}" ditambahkan`)
-    return prod
-  }, [addLog])
+    return result
+  }, [])
 
   const updateProductFn = useCallback(async (id: string, data: Partial<Omit<Product, "id" | "createdAt">>) => {
     const prev = state.products.find((p) => p.id === id)
@@ -206,29 +182,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (data.name && data.name !== prev.name) changes.push(`nama: "${prev.name}" → "${data.name}"`)
       if (data.price !== undefined && data.price !== prev.price) changes.push(`harga: ${prev.price} → ${data.price}`)
       if (data.stock !== undefined && data.stock !== prev.stock) changes.push(`stok: ${prev.stock} → ${data.stock}`)
-      addLog("updated", "product", id, result.name, changes.length ? `Produk "${prev.name}" diubah: ${changes.join(", ")}` : `Produk "${prev.name}" diperbarui`)
     }
     return result
-  }, [addLog, state.products])
+  }, [state.products])
 
   const deleteProductFn = useCallback(async (id: string) => {
-    const prod = state.products.find((p) => p.id === id)
     const result = await deleteProduct(id)
     const products = await getProducts()
     dispatch({ type: "SET_PRODUCTS", payload: products })
-    if (result && prod) addLog("deleted", "product", id, prod.name, `Produk "${prod.name}" dihapus`)
     return result
-  }, [addLog, state.products])
+  }, [])
 
   const updateStockFn = useCallback(async (id: string, qty: number) => {
     const ok = await updateProductStock(id, qty)
     if (!ok) return false
     const products = await getProducts()
     dispatch({ type: "SET_PRODUCTS", payload: products })
-    const prod = products.find((p) => p.id === id)
-    if (prod) addLog("updated", "product", id, prod.name, `Stok "${prod.name}" diubah ${qty > 0 ? `+${qty}` : qty} → ${prod.stock}`)
     return true
-  }, [addLog])
+  }, [])
 
   const addToCart = useCallback((item: CartItem) => {
     dispatch({ type: "ADD_TO_CART", payload: item })
@@ -259,6 +230,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         payment,
         paymentMethod,
         discount,
+        // Kunci sekali pakai per checkout: kalau tombol Bayar tertekan dua kali
+        // (atau jaringan lambat lalu di-retry), server mengembalikan transaksi
+        // yang sama alih-alih memotong stok dua kali.
+        idempotencyKey: crypto.randomUUID(),
       }
 
       const result = await addTransaction(transaction)
@@ -266,85 +241,66 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_TRANSACTIONS", payload: transactions })
       dispatch({ type: "SET_PRODUCTS", payload: products })
       dispatch({ type: "CLEAR_CART" })
-      if (result) {
-        const items = state.cart.map((i) => `${i.name} x${i.qty}`).join(", ")
-        addLog("checkout", "transaction", result.id, `Rp${result.total}`, `Transaksi Rp${result.total.toLocaleString("id-ID")} — ${items}`)
-      }
       return result
     },
-    [state.cart, addLog]
+    [state.cart]
   )
 
   const addDebtFn = useCallback(async (debt: { customerName: string; description: string; amount: number; status: DebtStatus }) => {
     const result = await addDebt(debt)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
-    addLog("created", "debt", result.id, debt.customerName, `Piutang ${debt.customerName} — Rp${debt.amount.toLocaleString("id-ID")}`)
     return result
-  }, [addLog])
+  }, [])
 
   const updateDebtStatusFn = useCallback(async (id: string, status: DebtStatus) => {
-    const prev = state.debts.find((d) => d.id === id)
     const result = await updateDebtStatus(id, status)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
-    if (result && prev && status === "paid") addLog("paid", "debt", id, prev.customerName, `Piutang ${prev.customerName} — Rp${prev.amount.toLocaleString("id-ID")} — Lunas`)
     return result
-  }, [addLog, state.debts])
+  }, [])
 
   const updateDebtFn = useCallback(async (id: string, data: Partial<Omit<Debt, "id" | "createdAt">>) => {
-    const prev = state.debts.find((d) => d.id === id)
     const result = await updateDebt(id, data)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
-    if (result && prev) addLog("updated", "debt", id, result.customerName, `Piutang "${prev.customerName}" diperbarui`)
     return result
-  }, [addLog, state.debts])
+  }, [])
 
   const deleteDebtFn = useCallback(async (id: string) => {
-    const prev = state.debts.find((d) => d.id === id)
     const result = await deleteDebt(id)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
-    if (result && prev) addLog("deleted", "debt", id, prev.customerName, `Piutang "${prev.customerName}" dihapus`)
     return result
-  }, [addLog, state.debts])
+  }, [])
 
   const payDebtFn = useCallback(async (id: string, amount: number, note: string) => {
     const result = await addDebtPayment(id, amount, note)
     const debts = await getDebts()
     dispatch({ type: "SET_DEBTS", payload: debts })
-    if (result) {
-      addLog("paid", "debt", id, result.customerName, `Pembayaran piutang ${result.customerName} Rp${amount.toLocaleString("id-ID")}${result.remaining > 0 ? ` — sisa Rp${result.remaining.toLocaleString("id-ID")}` : " — Lunas"}`)
-    }
     return result
-  }, [addLog])
+  }, [])
 
   const addReminderFn = useCallback(async (reminder: Omit<StockReminder, "id" | "createdAt">) => {
     const result = await addReminder(reminder)
     const reminders = await getReminders()
     dispatch({ type: "SET_REMINDERS", payload: reminders })
-    addLog("created", "reminder", result.id, result.title, `Pengingat "${result.title}" dibuat`)
     return result
-  }, [addLog])
+  }, [])
 
   const updateReminderFn = useCallback(async (id: string, data: Partial<Omit<StockReminder, "id" | "createdAt">>) => {
-    const prev = state.reminders.find((r) => r.id === id)
     const result = await updateReminder(id, data)
     const reminders = await getReminders()
     dispatch({ type: "SET_REMINDERS", payload: reminders })
-    if (result && prev) addLog("updated", "reminder", id, result.title, `Pengingat "${prev.title}" diperbarui`)
     return result
-  }, [addLog, state.reminders])
+  }, [])
 
   const deleteReminderFn = useCallback(async (id: string) => {
-    const prev = state.reminders.find((r) => r.id === id)
     const result = await deleteReminder(id)
     const reminders = await getReminders()
     dispatch({ type: "SET_REMINDERS", payload: reminders })
-    if (result && prev) addLog("deleted", "reminder", id, prev.title, `Pengingat "${prev.title}" dihapus`)
     return result
-  }, [addLog, state.reminders])
+  }, [])
 
   return (
     <StoreContext.Provider

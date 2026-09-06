@@ -1,22 +1,29 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element -- gambar produk berupa data-URL, next/image tidak mendukungnya */
+
 import { useState } from "react"
 import { useStore } from "@/context/StoreContext"
-import { formatRupiah, compressImage } from "@/lib/utils"
+import { useAuth } from "@/context/AuthContext"
+import { opnameProduct } from "@/lib/api"
+import { formatRupiah, compressImage, isLowStock } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 
 interface ProductForm {
   name: string
   price: string
+  costPrice: string
   stock: string
+  minStock: string
   categoryId: string
   barcode: string
 }
 
-const emptyForm: ProductForm = { name: "", price: "", stock: "", categoryId: "", barcode: "" }
+const emptyForm: ProductForm = { name: "", price: "", costPrice: "", stock: "", minStock: "", categoryId: "", barcode: "" }
 
 export default function ProductsPage() {
-  const { products, categories, addProduct, updateProduct, deleteProduct, updateStock } = useStore()
+  const { products, categories, addProduct, updateProduct, deleteProduct, updateStock, refreshData } = useStore()
+  const { isOwner } = useAuth()
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [formImage, setFormImage] = useState<string>("")
   const [search, setSearch] = useState("")
@@ -39,15 +46,34 @@ export default function ProductsPage() {
     e.preventDefault()
     const name = form.name.trim()
     const price = Number(form.price)
+    const costPrice = Number(form.costPrice) || 0
     const stock = Number(form.stock)
+    const minStock = Number(form.minStock) || 0
     if (!name || !form.categoryId) { setError("Nama dan kategori harus diisi"); return }
-    if (price < 0 || stock < 0) { setError("Harga dan stok tidak boleh negatif"); return }
-    addProduct({ name, price, stock, categoryId: form.categoryId, image: formImage || undefined, barcode: form.barcode.trim() || undefined })
+    if (price < 0 || stock < 0 || costPrice < 0) { setError("Harga dan stok tidak boleh negatif"); return }
+    addProduct({
+      name,
+      price,
+      costPrice,
+      stock,
+      minStock,
+      categoryId: form.categoryId,
+      image: formImage || undefined,
+      barcode: form.barcode.trim() || undefined,
+    })
     resetForm()
   }
 
   function openEdit(p: Product) {
-    setEditForm({ name: p.name, price: String(p.price), stock: String(p.stock), categoryId: p.categoryId, barcode: p.barcode || "" })
+    setEditForm({
+      name: p.name,
+      price: String(p.price),
+      costPrice: String(p.costPrice),
+      stock: String(p.stock),
+      minStock: String(p.minStock),
+      categoryId: p.categoryId,
+      barcode: p.barcode || "",
+    })
     setEditImage(p.image || "")
     setEditError("")
     setEditTarget(p)
@@ -57,10 +83,20 @@ export default function ProductsPage() {
     if (!editTarget) return
     const name = editForm.name.trim()
     const price = Number(editForm.price)
+    const costPrice = Number(editForm.costPrice) || 0
     const stock = Number(editForm.stock)
+    const minStock = Number(editForm.minStock) || 0
     if (!name || !editForm.categoryId) { setEditError("Nama dan kategori harus diisi"); return }
-    if (price < 0 || stock < 0) { setEditError("Harga dan stok tidak boleh negatif"); return }
-    const data: Partial<Omit<Product, "id" | "createdAt">> = { name, price, stock, categoryId: editForm.categoryId, barcode: editForm.barcode.trim() || undefined }
+    if (price < 0 || stock < 0 || costPrice < 0) { setEditError("Harga dan stok tidak boleh negatif"); return }
+    const data: Partial<Omit<Product, "id" | "createdAt">> = {
+      name,
+      price,
+      costPrice,
+      stock,
+      minStock,
+      categoryId: editForm.categoryId,
+      barcode: editForm.barcode.trim() || undefined,
+    }
     if (editImage !== (editTarget.image || "")) data.image = editImage || undefined
     updateProduct(editTarget.id, data)
     setEditTarget(null)
@@ -76,6 +112,24 @@ export default function ProductsPage() {
     const qty = Number(input)
     if (!Number.isInteger(qty) || qty <= 0) { alert("Jumlah harus bilangan bulat positif"); return }
     updateStock(p.id, qty)
+  }
+
+  /** Stok opname: masukkan hasil hitung fisik, server yang menghitung selisihnya. */
+  async function handleOpname(p: Product) {
+    const input = prompt(`Stok opname "${p.name}"\nSistem mencatat ${p.stock} pcs.\nBerapa hasil hitung fisiknya?`, String(p.stock))
+    if (input === null) return
+    const counted = Number(input)
+    if (!Number.isInteger(counted) || counted < 0) { alert("Jumlah harus bilangan bulat ≥ 0"); return }
+    if (counted === p.stock) { alert("Stok sudah cocok, tidak ada perubahan."); return }
+
+    const reason = prompt("Alasan selisih (mis. rusak, hilang, salah catat):", "") ?? ""
+    try {
+      const res = await opnameProduct(p.id, counted, reason)
+      await refreshData()
+      alert(`Stok "${p.name}" disesuaikan: ${res.before} → ${res.stock} (selisih ${res.delta > 0 ? "+" : ""}${res.delta})`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal menyimpan opname")
+    }
   }
 
   async function handleFormImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -137,6 +191,20 @@ export default function ProductsPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
           <input
+            type="number"
+            placeholder="Harga modal (untuk hitung laba)"
+            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            value={form.costPrice}
+            onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Stok minimum (peringatan)"
+            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            value={form.minStock}
+            onChange={(e) => setForm({ ...form, minStock: e.target.value })}
+          />
+          <input
             type="text"
             placeholder="Barcode (opsional)"
             className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
@@ -193,6 +261,7 @@ export default function ProductsPage() {
                 <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Nama</th>
                 <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Kategori</th>
                 <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Harga</th>
+                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Laba/pcs</th>
                 <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Stok</th>
                 <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Aksi</th>
               </tr>
@@ -220,18 +289,33 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-3 sm:px-6 py-3.5 text-right font-semibold text-[#44403c]">{formatRupiah(p.price)}</td>
                     <td className="px-3 sm:px-6 py-3.5 text-right">
-                      <span className={`font-semibold ${p.stock <= 5 ? "text-red-500" : "text-[#44403c]"}`}>{p.stock}</span>
+                      {p.costPrice > 0 ? (
+                        <span className={p.price - p.costPrice > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                          {formatRupiah(p.price - p.costPrice)}
+                        </span>
+                      ) : (
+                        <span className="text-[#a8a29e] text-xs">belum diisi</span>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3.5 text-right">
+                      <span className={`font-semibold ${isLowStock(p) ? "text-red-500" : "text-[#44403c]"}`}>{p.stock}</span>
+                      {isLowStock(p) && <div className="text-[10px] text-red-400">min {p.minStock || 10}</div>}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5 text-right whitespace-nowrap">
                       <button onClick={() => handleRestock(p)} className="text-xs px-3 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors font-medium mr-1.5">
                         + Stok
                       </button>
+                      <button onClick={() => handleOpname(p)} className="text-xs px-3 py-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors font-medium mr-1.5">
+                        Opname
+                      </button>
                       <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-lg text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1917] transition-colors font-medium mr-1.5">
                         Edit
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="text-xs px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors font-medium">
-                        Hapus
-                      </button>
+                      {isOwner && (
+                        <button onClick={() => handleDelete(p.id)} className="text-xs px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors font-medium">
+                          Hapus
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )
@@ -271,13 +355,35 @@ export default function ProductsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Stok</label>
+                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Harga Modal</label>
                 <input
                   type="number"
                   className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
-                  value={editForm.stock}
-                  onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                  value={editForm.costPrice}
+                  onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })}
                 />
+                <p className="text-[11px] text-[#a8a29e] mt-1">Dipakai menghitung laba kotor di laporan.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#78716c] mb-1.5">Stok</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                    value={editForm.stock}
+                    onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#78716c] mb-1.5">Stok Minimum</label>
+                  <input
+                    type="number"
+                    placeholder="10"
+                    className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                    value={editForm.minStock}
+                    onChange={(e) => setEditForm({ ...editForm, minStock: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#78716c] mb-1.5">Kategori</label>

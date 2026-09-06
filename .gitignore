@@ -50,6 +50,9 @@ server/node_modules
 .CLAUDE.md
 .AGENT.md
 
+# docs lokal (bukan bagian dari repo)
+API_DOCUMENTATION.md
+
 # IDE / OS
 .vscode/
 .idea/

@@ -3,18 +3,33 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
+    restart: unless-stopped
+    # Tidak ada "ports:" — backend hanya dijangkau frontend lewat jaringan internal
+    # Docker. Membukanya ke host berarti siapa pun di WiFi yang sama bisa
+    # mengunduh seluruh database. Untuk debug lokal, pakai:
+    #   ports: ["127.0.0.1:3001:3001"]
+    expose:
+      - "3001"
     volumes:
       - warung-data:/app/data
     environment:
       - PORT=3001
       - DB_PATH=/app/data/warung.db
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      # PIN pemilik saat database pertama kali dibuat. Ganti sebelum deploy.
+      - OWNER_PIN=${OWNER_PIN:-111111}
+      # Backend berada di belakang proxy frontend (1 hop).
+      - TRUST_PROXY=1
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: unless-stopped
+    # Data berjalan dalam HTTP plaintext di jaringan lokal. Untuk dipakai dari luar
+    # jaringan warung (atau kalau butuh HTTPS), letakkan compose ini di belakang
+    # reverse proxy yang meng-terminate TLS (mis. Caddy/Traefik/nginx) dan arahkan
+    # 3000 ke sana; backend tetap hanya di jaringan internal Docker.
     ports:
       - "3000:3000"
     depends_on:

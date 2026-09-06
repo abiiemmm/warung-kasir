@@ -1,4 +1,4 @@
-const CACHE = "warung-kasir-v1"
+const CACHE = "warung-kasir-v2"
 const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/icon-maskable.svg"]
 
 self.addEventListener("install", (event) => {
@@ -26,18 +26,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE).then((cache) => cache.put(request, copy))
-          return response
-        })
-        .catch(() => caches.match(request))
-    )
-    return
-  }
+  // Respons API tidak pernah di-cache: isinya data penjualan, nama pelanggan, dan
+  // utang mereka — menyimpannya di perangkat membuat data itu tetap terbaca
+  // setelah logout. Data basi juga berbahaya untuk stok dan harga.
+  if (url.pathname.startsWith("/api/")) return
 
   event.respondWith(
     caches.match(request).then((cached) => {

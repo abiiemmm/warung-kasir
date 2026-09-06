@@ -2,6 +2,7 @@ import { Router } from "express"
 import { db, generateId } from "../db"
 import { reminderSchema, reminderUpdateSchema } from "../validation"
 import { HttpError } from "../utils"
+import { writeLog } from "../audit"
 
 const router = Router()
 
@@ -23,12 +24,16 @@ router.post("/", (req, res) => {
   db.prepare(
     "INSERT INTO reminders (id, date, title, product_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(id, data.date, data.title, data.productId || null, data.notes || "", createdAt)
+
+  writeLog(req, { action: "created", entity: "reminder", entityId: id, entityName: data.title, details: `Pengingat "${data.title}" dibuat` })
   res.json({ id, date: data.date, title: data.title, productId: data.productId || undefined, notes: data.notes || "", createdAt })
 })
 
 router.put("/:id", (req, res) => {
   const data = reminderUpdateSchema.parse(req.body)
-  const existing = db.prepare("SELECT id FROM reminders WHERE id = ?").get(req.params.id)
+  const existing = db.prepare("SELECT id, title FROM reminders WHERE id = ?").get(req.params.id) as
+    | { id: string; title: string }
+    | undefined
   if (!existing) throw new HttpError(404, "Pengingat tidak ditemukan")
 
   const fields: string[] = []
@@ -44,12 +49,31 @@ router.put("/:id", (req, res) => {
   }
 
   const row = db.prepare(`SELECT ${selectColumns} FROM reminders WHERE id = ?`).get(req.params.id) as Record<string, unknown>
+  writeLog(req, {
+    action: "updated",
+    entity: "reminder",
+    entityId: existing.id,
+    entityName: String(row.title),
+    details: `Pengingat "${existing.title}" diperbarui`,
+  })
   res.json(mapReminder(row))
 })
 
 router.delete("/:id", (req, res) => {
-  const result = db.prepare("DELETE FROM reminders WHERE id = ?").run(req.params.id)
-  res.json({ success: result.changes > 0 })
+  const existing = db.prepare("SELECT id, title FROM reminders WHERE id = ?").get(req.params.id) as
+    | { id: string; title: string }
+    | undefined
+  if (!existing) throw new HttpError(404, "Pengingat tidak ditemukan")
+
+  db.prepare("DELETE FROM reminders WHERE id = ?").run(req.params.id)
+  writeLog(req, {
+    action: "deleted",
+    entity: "reminder",
+    entityId: existing.id,
+    entityName: existing.title,
+    details: `Pengingat "${existing.title}" dihapus`,
+  })
+  res.json({ success: true })
 })
 
 export default router

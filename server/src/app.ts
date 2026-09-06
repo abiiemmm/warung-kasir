@@ -10,46 +10,76 @@ import transactionsRouter from "./routes/transactions"
 import debtsRouter from "./routes/debts"
 import remindersRouter from "./routes/reminders"
 import logsRouter from "./routes/logs"
+import shiftsRouter from "./routes/shifts"
 import { backupRouter, exportRouter, restoreRouter, resetRouter } from "./routes/backup"
 import reportsRouter from "./routes/reports"
+import { authRouter, usersRouter } from "./routes/auth"
+import { ensureDefaultOwner, requireAuth, requireOwner } from "./auth"
+import { getAllowedOrigins, originGuard, requireJsonOnPost } from "./middleware"
 import { HttpError } from "./utils"
 
 export function createApp() {
   const app = express()
 
+  // Di belakang reverse proxy, X-Forwarded-For baru dipercaya bila TRUST_PROXY diisi.
+  app.set("trust proxy", Number(process.env.TRUST_PROXY || 0))
+
   app.use(helmet())
+  app.use(cors({ origin: getAllowedOrigins(), credentials: true }))
+  app.use(originGuard)
 
-  const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-  app.use(cors({ origin: allowedOrigins }))
-
-  app.use(express.json({ limit: "5mb" }))
+  // 1 MB sudah lebih dari cukup: gambar produk dibatasi ~300 KB oleh skema Zod.
+  app.use(express.json({ limit: "1mb" }))
 
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 300,
+    // Longgar, karena seluruh kasir tampak berasal dari satu IP saat lewat proxy frontend.
+    limit: 2000,
     standardHeaders: "draft-7",
     legacyHeaders: false,
   })
   app.use("/api", limiter)
 
-  app.use("/api/categories", categoriesRouter)
-  app.use("/api/products", productsRouter)
-  app.use("/api/transactions", transactionsRouter)
-  app.use("/api/debts", debtsRouter)
-  app.use("/api/reminders", remindersRouter)
-  app.use("/api/logs", logsRouter)
-  app.use("/api/backup", backupRouter)
-  app.use("/api/export", exportRouter)
-  app.use("/api/restore", restoreRouter)
-  app.use("/api/reset", resetRouter)
-  app.use("/api/reports", reportsRouter)
+  // Operasi yang menyentuh seluruh database dibatasi jauh lebih ketat.
+  const destructiveLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 20,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: { error: "Terlalu sering. Coba lagi nanti." },
+  })
+
+  ensureDefaultOwner()
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" })
   })
+
+  // Login & logout terbuka; /me dan /change-pin dijaga di dalam router-nya sendiri.
+  app.use("/api/auth", requireJsonOnPost, authRouter)
+
+  // Restore memakai body biner, jadi tidak lewat penjaga JSON.
+  app.use("/api/restore", requireAuth, requireOwner, destructiveLimiter, restoreRouter)
+
+  const api = express.Router()
+  api.use(requireAuth, requireJsonOnPost)
+
+  api.use("/users", usersRouter)
+  api.use("/categories", categoriesRouter)
+  api.use("/products", productsRouter)
+  api.use("/transactions", transactionsRouter)
+  api.use("/debts", debtsRouter)
+  api.use("/reminders", remindersRouter)
+  api.use("/logs", logsRouter)
+  api.use("/shifts", shiftsRouter)
+  api.use("/reports", reportsRouter)
+
+  // Seluruh isi database ikut terunduh di sini — hanya untuk pemilik.
+  api.use("/backup", requireOwner, destructiveLimiter, backupRouter)
+  api.use("/export", requireOwner, destructiveLimiter, exportRouter)
+  api.use("/reset", requireOwner, destructiveLimiter, resetRouter)
+
+  app.use("/api", api)
 
   app.use((_req, res) => {
     res.status(404).json({ error: "Not found" })
