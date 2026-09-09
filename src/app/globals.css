@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./warung.css";
 
 * {
   box-sizing: border-box;
@@ -6,6 +7,7 @@
 
 body {
   margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,13 +21,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #bdc5b2;
   border-radius: 3px;
 }
 
 ::selection {
-  background: #1e293b;
-  color: white;
+  background: #dfe7d5;
+  color: var(--green-dark);
 }
 
 @media print {

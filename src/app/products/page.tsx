@@ -145,36 +145,36 @@ export default function ProductsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-[22px] font-semibold text-[#1c1917] tracking-tight">Produk</h1>
-        <p className="text-sm text-[#78716c] mt-1">Kelola daftar produk warung</p>
+        <h1 className="text-[22px] font-semibold text-[var(--ink)] tracking-tight">Produk</h1>
+        <p className="text-sm text-[var(--muted)] mt-1">Kelola daftar produk warung</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6 mb-6">
-        <p className="text-sm font-semibold text-[#1c1917] mb-4">Tambah Produk Baru</p>
+      <form onSubmit={handleSubmit} className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6 mb-6">
+        <p className="text-sm font-semibold text-[var(--ink)] mb-4">Tambah Produk Baru</p>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           <input
             type="text"
             placeholder="Nama produk"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <input
             type="number"
             placeholder="Harga"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
           />
           <input
             type="number"
             placeholder="Stok"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.stock}
             onChange={(e) => setForm({ ...form, stock: e.target.value })}
           />
           <select
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.categoryId}
             onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
           >
@@ -183,7 +183,7 @@ export default function ProductsPage() {
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
-          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#f5f5f4] border border-dashed border-[#e7e5e4] rounded-lg text-sm text-[#a8a29e] hover:text-[#78716c] hover:border-[#d6d3d1] cursor-pointer transition-all">
+          <label className="flex items-center gap-2 px-4 py-2.5 bg-[var(--paper)] border border-dashed border-[var(--line)] rounded-lg text-sm text-[#858a7b] hover:text-[var(--muted)] hover:border-[#cdd2c2] cursor-pointer transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
             {formImage ? "Ganti Gambar" : "Upload Gambar"}
             <input type="file" accept="image/*" className="hidden" onChange={handleFormImage} />
@@ -193,51 +193,51 @@ export default function ProductsPage() {
           <input
             type="number"
             placeholder="Harga modal (untuk hitung laba)"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.costPrice}
             onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
           />
           <input
             type="number"
             placeholder="Stok minimum (peringatan)"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.minStock}
             onChange={(e) => setForm({ ...form, minStock: e.target.value })}
           />
           <input
             type="text"
             placeholder="Barcode (opsional)"
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={form.barcode}
             onChange={(e) => setForm({ ...form, barcode: e.target.value })}
           />
           {formImage && (
             <div className="flex items-center gap-3 sm:col-span-2">
-              <img src={formImage} alt="preview" className="w-12 h-12 rounded-lg object-cover border border-[#e7e5e4]" />
+              <img src={formImage} alt="preview" className="w-12 h-12 rounded-lg object-cover border border-[var(--line)]" />
               <button type="button" onClick={() => setFormImage("")} className="text-xs text-red-500 hover:text-red-600">Hapus</button>
             </div>
           )}
         </div>
         {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
         <div className="flex gap-2 mt-3">
-          <button type="submit" className="px-5 py-2 bg-[#1c1917] text-white rounded-lg text-sm font-medium hover:bg-[#292524] transition-colors">Tambah Produk</button>
+          <button type="submit" className="px-5 py-2 bg-[var(--ink)] text-white rounded-lg text-sm font-medium hover:bg-[var(--green-dark)] transition-colors">Tambah Produk</button>
         </div>
       </form>
 
-      <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-4 mb-6">
+      <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-4 mb-6">
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a8a29e]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858a7b]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
               type="text"
               placeholder="Cari produk..."
-              className="w-full pl-9 pr-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+              className="w-full pl-9 pr-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <select
-            className="px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+            className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
           >
@@ -249,66 +249,66 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none overflow-hidden">
         {filtered.length === 0 ? (
-          <p className="p-8 text-sm text-[#78716c] text-center">Tidak ada produk</p>
+          <p className="p-8 text-sm text-[var(--muted)] text-center">Tidak ada produk</p>
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#f5f5f4]">
-                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Gambar</th>
-                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Nama</th>
-                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Kategori</th>
-                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Harga</th>
-                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Laba/pcs</th>
-                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Stok</th>
-                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Aksi</th>
+              <tr className="border-b border-[var(--paper)]">
+                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Gambar</th>
+                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Nama</th>
+                <th className="text-left px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Kategori</th>
+                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Harga</th>
+                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Laba/pcs</th>
+                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Stok</th>
+                <th className="text-right px-3 sm:px-6 py-3.5 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => {
                 const cat = categories.find((c) => c.id === p.categoryId)
                 return (
-                  <tr key={p.id} className="border-b border-[#f5f5f4] hover:bg-[#fafaf9] transition-colors">
+                  <tr key={p.id} className="border-b border-[var(--paper)] hover:bg-[#fafaf9] transition-colors">
                     <td className="px-3 sm:px-6 py-3.5">
                       {p.image ? (
-                        <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-[#e7e5e4]" />
+                        <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-[var(--line)]" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#f5f5f4] flex items-center justify-center text-sm">📦</div>
+                        <div className="w-10 h-10 rounded-lg bg-[var(--paper)] flex items-center justify-center text-sm">📦</div>
                       )}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5">
-                      <div className="font-medium text-[#44403c]">{p.name}</div>
-                      {p.barcode && <div className="text-[11px] text-[#a8a29e] font-mono">{p.barcode}</div>}
+                      <div className="font-medium text-[#45533f]">{p.name}</div>
+                      {p.barcode && <div className="text-[11px] text-[#858a7b] font-mono">{p.barcode}</div>}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#f5f5f4] text-[#78716c]">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-[var(--paper)] text-[var(--muted)]">
                         {cat?.name ?? "-"}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-6 py-3.5 text-right font-semibold text-[#44403c]">{formatRupiah(p.price)}</td>
+                    <td className="px-3 sm:px-6 py-3.5 text-right font-semibold text-[#45533f]">{formatRupiah(p.price)}</td>
                     <td className="px-3 sm:px-6 py-3.5 text-right">
                       {p.costPrice > 0 ? (
-                        <span className={p.price - p.costPrice > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                        <span className={p.price - p.costPrice > 0 ? "text-[var(--green)] font-medium" : "text-red-500 font-medium"}>
                           {formatRupiah(p.price - p.costPrice)}
                         </span>
                       ) : (
-                        <span className="text-[#a8a29e] text-xs">belum diisi</span>
+                        <span className="text-[#858a7b] text-xs">belum diisi</span>
                       )}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5 text-right">
-                      <span className={`font-semibold ${isLowStock(p) ? "text-red-500" : "text-[#44403c]"}`}>{p.stock}</span>
+                      <span className={`font-semibold ${isLowStock(p) ? "text-red-500" : "text-[#45533f]"}`}>{p.stock}</span>
                       {isLowStock(p) && <div className="text-[10px] text-red-400">min {p.minStock || 10}</div>}
                     </td>
                     <td className="px-3 sm:px-6 py-3.5 text-right whitespace-nowrap">
-                      <button onClick={() => handleRestock(p)} className="text-xs px-3 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors font-medium mr-1.5">
+                      <button onClick={() => handleRestock(p)} className="text-xs px-3 py-1.5 rounded-lg text-[var(--green)] hover:bg-emerald-50 transition-colors font-medium mr-1.5">
                         + Stok
                       </button>
                       <button onClick={() => handleOpname(p)} className="text-xs px-3 py-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors font-medium mr-1.5">
                         Opname
                       </button>
-                      <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-lg text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1917] transition-colors font-medium mr-1.5">
+                      <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-lg text-[var(--muted)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors font-medium mr-1.5">
                         Edit
                       </button>
                       {isOwner && (
@@ -328,67 +328,67 @@ export default function ProductsPage() {
 
       {editTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setEditTarget(null)}>
-          <div className="bg-white rounded-2xl shadow-xl border border-[#e7e5e4] w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-[#e7e5e4]">
-              <h2 className="text-sm font-semibold text-[#1c1917]">Edit Produk</h2>
-              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-[#f5f5f4] transition-colors">
+          <div className="bg-[var(--surface)] rounded-lg shadow-xl border border-[var(--line)] w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-[var(--line)]">
+              <h2 className="text-sm font-semibold text-[var(--ink)]">Edit Produk</h2>
+              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-[var(--paper)] transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Nama Produk</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Nama Produk</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Harga</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Harga</label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                   value={editForm.price}
                   onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Harga Modal</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Harga Modal</label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                   value={editForm.costPrice}
                   onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })}
                 />
-                <p className="text-[11px] text-[#a8a29e] mt-1">Dipakai menghitung laba kotor di laporan.</p>
+                <p className="text-[11px] text-[#858a7b] mt-1">Dipakai menghitung laba kotor di laporan.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#78716c] mb-1.5">Stok</label>
+                  <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Stok</label>
                   <input
                     type="number"
-                    className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                     value={editForm.stock}
                     onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#78716c] mb-1.5">Stok Minimum</label>
+                  <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Stok Minimum</label>
                   <input
                     type="number"
                     placeholder="10"
-                    className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] placeholder:text-[#858a7b] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                     value={editForm.minStock}
                     onChange={(e) => setEditForm({ ...editForm, minStock: e.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Kategori</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Kategori</label>
                 <select
-                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                   value={editForm.categoryId}
                   onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
                 >
@@ -399,23 +399,23 @@ export default function ProductsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Barcode (opsional)</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Barcode (opsional)</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
+                  className="w-full px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 focus:border-[var(--ink)] transition-all"
                   value={editForm.barcode}
                   onChange={(e) => setEditForm({ ...editForm, barcode: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#78716c] mb-1.5">Gambar</label>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Gambar</label>
                 <div className="flex items-center gap-3">
                   {editImage ? (
-                    <img src={editImage} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-[#e7e5e4]" />
+                    <img src={editImage} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-[var(--line)]" />
                   ) : (
-                    <div className="w-14 h-14 rounded-lg bg-[#f5f5f4] flex items-center justify-center text-lg border border-[#e7e5e4]">📦</div>
+                    <div className="w-14 h-14 rounded-lg bg-[var(--paper)] flex items-center justify-center text-lg border border-[var(--line)]">📦</div>
                   )}
-                  <label className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f4] border border-dashed border-[#e7e5e4] rounded-lg text-sm text-[#a8a29e] hover:text-[#78716c] hover:border-[#d6d3d1] cursor-pointer transition-all">
+                  <label className="flex items-center gap-2 px-4 py-2 bg-[var(--paper)] border border-dashed border-[var(--line)] rounded-lg text-sm text-[#858a7b] hover:text-[var(--muted)] hover:border-[#cdd2c2] cursor-pointer transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                     {editImage ? "Ganti" : "Upload"}
                     <input type="file" accept="image/*" className="hidden" onChange={handleEditImage} />
@@ -427,8 +427,8 @@ export default function ProductsPage() {
               </div>
               {editError && <p className="text-xs text-red-500">{editError}</p>}
               <div className="flex gap-3 pt-2">
-                <button onClick={saveEdit} className="flex-1 px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] transition-colors">Simpan</button>
-                <button onClick={() => setEditTarget(null)} className="flex-1 px-5 py-2.5 border border-[#e7e5e4] rounded-xl text-sm text-[#78716c] hover:bg-[#f5f5f4] transition-colors">Batal</button>
+                <button onClick={saveEdit} className="flex-1 px-5 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] transition-colors">Simpan</button>
+                <button onClick={() => setEditTarget(null)} className="flex-1 px-5 py-2.5 border border-[var(--line)] rounded-md text-sm text-[var(--muted)] hover:bg-[var(--paper)] transition-colors">Batal</button>
               </div>
             </div>
           </div>

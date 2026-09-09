@@ -58,8 +58,8 @@ export default function ReportsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-[#1c1917] tracking-tight">Laporan</h1>
-          <p className="text-sm text-[#78716c] mt-1">Rekap penjualan berdasarkan rentang tanggal</p>
+          <h1 className="text-[22px] font-semibold text-[var(--ink)] tracking-tight">Laporan</h1>
+          <p className="text-sm text-[var(--muted)] mt-1">Rekap penjualan berdasarkan rentang tanggal</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
@@ -68,36 +68,36 @@ export default function ReportsPage() {
               value={from}
               max={to}
               onChange={(e) => e.target.value && setRange((r) => ({ ...r, from: e.target.value }))}
-              className="px-3 py-2.5 bg-white border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 transition-all"
+              className="px-3 py-2.5 bg-[var(--surface)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 transition-all"
             />
-            <span className="text-xs text-[#a8a29e]">s/d</span>
+            <span className="text-xs text-[#858a7b]">s/d</span>
             <input
               type="date"
               value={to}
               min={from}
               onChange={(e) => e.target.value && setRange((r) => ({ ...r, to: e.target.value }))}
-              className="px-3 py-2.5 bg-white border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 transition-all"
+              className="px-3 py-2.5 bg-[var(--surface)] border border-[var(--line)] rounded-lg text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ink)]/10 transition-all"
             />
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleExport("pdf")}
               disabled={!summary || exporting !== null}
-              className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-500 disabled:opacity-50 transition-colors"
+              className="px-4 py-2.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-500 disabled:opacity-50 transition-colors"
             >
               {exporting === "pdf" ? "Menyiapkan..." : "⬇ PDF"}
             </button>
             <button
               onClick={() => handleExport("docx")}
               disabled={!summary || exporting !== null}
-              className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
+              className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
             >
               {exporting === "docx" ? "Menyiapkan..." : "⬇ Word"}
             </button>
             <button
               onClick={() => handleExport("csv")}
               disabled={!summary || exporting !== null}
-              className="px-4 py-2.5 bg-[#1c1917] text-white rounded-xl text-sm font-medium hover:bg-[#292524] disabled:opacity-50 transition-colors"
+              className="px-4 py-2.5 bg-[var(--ink)] text-white rounded-md text-sm font-medium hover:bg-[var(--green-dark)] disabled:opacity-50 transition-colors"
             >
               ⬇ CSV
             </button>
@@ -106,8 +106,8 @@ export default function ReportsPage() {
       </div>
 
       {loading || !summary ? (
-        <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-12 text-center">
-          <p className="text-sm text-[#a8a29e]">Memuat laporan...</p>
+        <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-12 text-center">
+          <p className="text-sm text-[#858a7b]">Memuat laporan...</p>
         </div>
       ) : (
         <>
@@ -118,42 +118,42 @@ export default function ReportsPage() {
               { label: "Item Terjual", value: String(summary.itemCount), icon: "📦" },
               { label: "Rata-rata / Transaksi", value: formatRupiah(summary.avgPerTx), icon: "📊" },
             ].map((s) => (
-              <div key={s.label} className={`bg-white rounded-xl border shadow-sm p-5 ${s.highlight ? "border-emerald-100" : "border-[#e7e5e4]"}`}>
+              <div key={s.label} className={`bg-[var(--surface)] rounded-md border shadow-none p-5 ${s.highlight ? "border-emerald-100" : "border-[var(--line)]"}`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-lg">{s.icon}</span>
-                  {s.highlight && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">{summary.count} tx</span>}
+                  {s.highlight && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-[var(--green)]">{summary.count} tx</span>}
                 </div>
-                <p className="text-xl font-semibold text-[#1c1917] tracking-tight">{s.value}</p>
-                <p className="text-xs text-[#78716c] mt-1">{s.label}</p>
+                <p className="text-xl font-semibold text-[var(--ink)] tracking-tight">{s.value}</p>
+                <p className="text-xs text-[var(--muted)] mt-1">{s.label}</p>
               </div>
             ))}
           </div>
 
           {summary.totalDiscount > 0 && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-sm text-amber-700 mb-6">
+            <div className="bg-amber-50 border border-amber-100 rounded-md px-4 py-3 text-sm text-amber-700 mb-6">
               Total diskon diberikan: −{formatRupiah(summary.totalDiscount)}
             </div>
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <h2 className="text-sm font-semibold text-[#1c1917]">Pendapatan Harian</h2>
+                <h2 className="text-sm font-semibold text-[var(--ink)]">Pendapatan Harian</h2>
               </div>
               {dailyChart.length === 0 ? (
-                <p className="text-sm text-[#a8a29e] py-10 text-center">Belum ada data</p>
+                <p className="text-sm text-[#858a7b] py-10 text-center">Belum ada data</p>
               ) : (
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dailyChart} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0efef" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={20} />
-                      <YAxis tick={{ fontSize: 10, fill: "#a8a29e" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#858a7b" }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={20} />
+                      <YAxis tick={{ fontSize: 10, fill: "#858a7b" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                       <Tooltip
                         formatter={(value) => [formatRupiah(Number(value)), "Pendapatan"]}
                         labelFormatter={(label) => `Tanggal ${label}`}
-                        contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e7e5e4", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                        contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--line)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
                       />
                       <Bar dataKey="pendapatan" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={20} />
                     </BarChart>
@@ -162,13 +162,13 @@ export default function ReportsPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-blue-500" />
-                <h2 className="text-sm font-semibold text-[#1c1917]">Pembagian Metode Bayar</h2>
+                <h2 className="text-sm font-semibold text-[var(--ink)]">Pembagian Metode Bayar</h2>
               </div>
               {Object.keys(summary.byMethod).length === 0 ? (
-                <p className="text-sm text-[#a8a29e] py-10 text-center">Belum ada data</p>
+                <p className="text-sm text-[#858a7b] py-10 text-center">Belum ada data</p>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(summary.byMethod).map(([method, revenue]) => {
@@ -178,10 +178,10 @@ export default function ReportsPage() {
                     return (
                       <div key={method}>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium text-[#44403c]">{labels[method] || method}</span>
-                          <span className="text-[#78716c]">{formatRupiah(revenue)} <span className="text-xs">({pct}%)</span></span>
+                          <span className="font-medium text-[#45533f]">{labels[method] || method}</span>
+                          <span className="text-[var(--muted)]">{formatRupiah(revenue)} <span className="text-xs">({pct}%)</span></span>
                         </div>
-                        <div className="h-2 bg-[#f5f5f4] rounded-full overflow-hidden">
+                        <div className="h-2 bg-[var(--paper)] rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${colors[method] || "bg-stone-400"}`} style={{ width: `${pct}%` }} />
                         </div>
                       </div>
@@ -193,27 +193,27 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#e7e5e4]">
-                <h2 className="text-sm font-semibold text-[#1c1917]">Per Kategori</h2>
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none overflow-hidden">
+              <div className="px-6 py-4 border-b border-[var(--line)]">
+                <h2 className="text-sm font-semibold text-[var(--ink)]">Per Kategori</h2>
               </div>
               {byCategory.length === 0 ? (
-                <p className="text-sm text-[#a8a29e] p-8 text-center">Belum ada data</p>
+                <p className="text-sm text-[#858a7b] p-8 text-center">Belum ada data</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[#f5f5f4]">
-                      <th className="text-left px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Kategori</th>
-                      <th className="text-right px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Qty</th>
-                      <th className="text-right px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Pendapatan</th>
+                    <tr className="border-b border-[var(--paper)]">
+                      <th className="text-left px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Kategori</th>
+                      <th className="text-right px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Qty</th>
+                      <th className="text-right px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Pendapatan</th>
                     </tr>
                   </thead>
                   <tbody>
                     {byCategory.map((c) => (
-                      <tr key={c.categoryId} className="border-b border-[#f5f5f4] last:border-0">
-                        <td className="px-6 py-3 font-medium text-[#44403c]">{c.name}</td>
-                        <td className="px-6 py-3 text-right text-[#78716c]">{c.qty}</td>
-                        <td className="px-6 py-3 text-right font-semibold text-[#1c1917]">{formatRupiah(c.revenue)}</td>
+                      <tr key={c.categoryId} className="border-b border-[var(--paper)] last:border-0">
+                        <td className="px-6 py-3 font-medium text-[#45533f]">{c.name}</td>
+                        <td className="px-6 py-3 text-right text-[var(--muted)]">{c.qty}</td>
+                        <td className="px-6 py-3 text-right font-semibold text-[var(--ink)]">{formatRupiah(c.revenue)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -221,27 +221,27 @@ export default function ReportsPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#e7e5e4]">
-                <h2 className="text-sm font-semibold text-[#1c1917]">Produk Terlaris</h2>
+            <div className="bg-[var(--surface)] rounded-md border border-[var(--line)] shadow-none overflow-hidden">
+              <div className="px-6 py-4 border-b border-[var(--line)]">
+                <h2 className="text-sm font-semibold text-[var(--ink)]">Produk Terlaris</h2>
               </div>
               {byProduct.length === 0 ? (
-                <p className="text-sm text-[#a8a29e] p-8 text-center">Belum ada data</p>
+                <p className="text-sm text-[#858a7b] p-8 text-center">Belum ada data</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[#f5f5f4]">
-                      <th className="text-left px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Produk</th>
-                      <th className="text-right px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Qty</th>
-                      <th className="text-right px-6 py-3 text-xs font-semibold text-[#78716c] uppercase tracking-wider">Pendapatan</th>
+                    <tr className="border-b border-[var(--paper)]">
+                      <th className="text-left px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Produk</th>
+                      <th className="text-right px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Qty</th>
+                      <th className="text-right px-6 py-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Pendapatan</th>
                     </tr>
                   </thead>
                   <tbody>
                     {byProduct.map((p) => (
-                      <tr key={p.productId} className="border-b border-[#f5f5f4] last:border-0">
-                        <td className="px-6 py-3 font-medium text-[#44403c] truncate max-w-[200px]">{p.name}</td>
-                        <td className="px-6 py-3 text-right text-[#78716c]">{p.qty}</td>
-                        <td className="px-6 py-3 text-right font-semibold text-[#1c1917]">{formatRupiah(p.revenue)}</td>
+                      <tr key={p.productId} className="border-b border-[var(--paper)] last:border-0">
+                        <td className="px-6 py-3 font-medium text-[#45533f] truncate max-w-[200px]">{p.name}</td>
+                        <td className="px-6 py-3 text-right text-[var(--muted)]">{p.qty}</td>
+                        <td className="px-6 py-3 text-right font-semibold text-[var(--ink)]">{formatRupiah(p.revenue)}</td>
                       </tr>
                     ))}
                   </tbody>

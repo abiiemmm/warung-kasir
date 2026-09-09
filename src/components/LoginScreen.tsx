@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Icon from "@/components/Icon"
 import { useAuth } from "@/context/AuthContext"
 
 export default function LoginScreen() {
@@ -25,62 +26,31 @@ export default function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f4] px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#0c0c0d] flex items-center justify-center mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="6" width="10" height="8" rx="1.6" fill="#ffffff" />
-              <rect x="6.2" y="7" width="7.6" height="2.6" rx="0.8" fill="#0c0c0d" />
-              <path d="M8.2 8.6l1 1 2-2.4" stroke="#34d399" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              <rect x="5" y="14.5" width="10" height="3" rx="1.2" fill="#f5f5f4" />
-              <circle cx="18" cy="17.5" r="3.2" fill="#34d399" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight text-[#1c1917]">Warung Kasir</h1>
-          <p className="text-sm text-[#78716c] mt-1">Masuk untuk mulai berjualan</p>
+    <div className="login-page">
+      <section className="login-story">
+        <div className="login-wordmark"><Icon name="shop" size={30} /> warung kasir.</div>
+        <div className="login-story-content"><span className="eyebrow">DARI BUKA WARUNG, SAMPAI TUTUP BUKU.</span><h1>Warung kecil.<br />Cerita besar.</h1><p>Temani hari-hari berjualan dengan catatan yang rapi. Dari belanja pertama sampai hitungan terakhir.</p>
+          <div className="warung-sign" aria-hidden="true"><div className="awning" /><div className="sign-inner"><span>SELAMAT DATANG DI</span><strong>Warung Kita</strong><div className="sign-rule" /><span>SEMOGA LARIS MANIS</span></div><div className="sign-bottom"><span>JUALAN</span><Icon name="shop" size={24} /><span>HARI INI</span></div></div>
         </div>
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#e7e5e4] shadow-sm p-6">
-          <label className="block text-xs font-semibold text-[#57534e] mb-1.5">Nama</label>
-          <input
-            type="text"
-            autoFocus
-            autoComplete="username"
-            placeholder="Pemilik"
-            className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <label className="block text-xs font-semibold text-[#57534e] mb-1.5 mt-4">PIN</label>
-          <input
-            type="password"
-            inputMode="numeric"
-            autoComplete="current-password"
-            placeholder="••••••"
-            maxLength={8}
-            className="w-full px-4 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-lg text-sm tracking-[0.4em] text-[#1c1917] placeholder:tracking-normal placeholder:text-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-[#1c1917]/10 focus:border-[#1c1917] transition-all"
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          />
-
-          {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={busy || !name.trim() || pin.length < 4}
-            className="w-full mt-5 px-4 py-2.5 bg-[#1c1917] text-white rounded-lg text-sm font-medium hover:bg-[#292524] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {busy ? "Memeriksa…" : "Masuk"}
-          </button>
-        </form>
-
-        <p className="text-[11px] text-[#a8a29e] text-center mt-4 leading-relaxed">
-          Belum pernah login? Akun bawaan: <span className="font-medium text-[#78716c]">Pemilik</span> dengan PIN{" "}
-          <span className="font-medium text-[#78716c]">111111</span>. Segera ganti lewat Pengaturan.
-        </p>
-      </div>
+        <div className="login-story-footer"><span>Dibuat untuk keseharian warung.</span><span>01 — ∞</span></div>
+      </section>
+      <section className="login-form-side">
+        <div className="login-form-wrap">
+          <span className="eyebrow">SELAMAT DATANG KEMBALI</span>
+          <h2>Siap buka warung?</h2>
+          <p>Masuk ke akun untuk mulai mencatat penjualan.</p>
+          <form onSubmit={handleSubmit} className="login-form">
+            <label htmlFor="login-name">Nama pengguna</label>
+            <input id="login-name" type="text" autoFocus autoComplete="username" placeholder="Masukkan nama Anda" value={name} onChange={e => setName(e.target.value)} required />
+            <label htmlFor="login-pin">PIN akun</label>
+            <input id="login-pin" type="password" inputMode="numeric" autoComplete="current-password" placeholder="Masukkan PIN" maxLength={8} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ""))} required />
+            {error && <p className="login-error" role="alert">{error}</p>}
+            <button type="submit" disabled={busy || !name.trim() || pin.length < 4} className="button-primary">{busy ? "Memeriksa akun…" : "Masuk ke warung"}<Icon name="arrow" size={18} /></button>
+          </form>
+          <details className="login-help"><summary>Pertama kali menggunakan?</summary><p>Akun bawaan: <strong>Pemilik</strong>, PIN <strong>111111</strong>. Ganti PIN melalui Pengaturan setelah masuk.</p></details>
+          <div className="login-bottom"><Icon name="receipt" size={17} /><span>Jualan lancar. Catatan teratur.</span></div>
+        </div>
+      </section>
     </div>
   )
 }
